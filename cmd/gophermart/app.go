@@ -16,21 +16,22 @@ const (
 
 type option func(a *application)
 
-func withServerHost(host string) option {
+func withServerAddr(host string, port int) option {
 	return func(a *application) {
-		a.serverHost = host
+		a.serverAddr = &serverAddr{
+			host: host,
+			port: port,
+		}
 	}
 }
 
-func withServerPort(port int) option {
-	return func(a *application) {
-		a.serverPort = port
-	}
+type serverAddr struct {
+	host string
+	port int
 }
 
 type application struct {
-	serverHost string
-	serverPort int
+	serverAddr *serverAddr
 }
 
 func newApp(opts ...option) *application {
@@ -43,18 +44,25 @@ func newApp(opts ...option) *application {
 }
 
 func (a application) run(ctx context.Context) error {
-	if a.serverHost == "" {
-		a.serverHost = serverHost
+	if a.serverAddr == nil {
+		a.serverAddr = &serverAddr{
+			host: serverHost,
+			port: serverPort,
+		}
+	} else {
+		if a.serverAddr.host == "" {
+			a.serverAddr.host = serverHost
+		}
+
+		if a.serverAddr.port == 0 {
+			a.serverAddr.port = serverPort
+		}
 	}
 
-	if a.serverPort == 0 {
-		a.serverPort = serverPort
-	}
-
-	log.Printf("Starting server on %s:%d", a.serverHost, a.serverPort)
+	log.Printf("Starting server on %s:%d", a.serverAddr.host, a.serverAddr.port)
 
 	server := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", a.serverHost, a.serverPort),
+		Addr: fmt.Sprintf("%s:%d", a.serverAddr.host, a.serverAddr.port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Hello, world!"))
 		}),
