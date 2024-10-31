@@ -1,0 +1,12 @@
+package logger
+
+type Logger interface {
+	WithField(key string, value interface{}) Logger
+	WithError(err error) Logger
+	Error(msg string)
+	Errorf(template string, args ...interface{})
+	Info(msg string)
+	Infof(template string, args ...interface{})
+	Debug(msg string)
+	Debugf(template string, args ...interface{})
+}

@@ -1,58 +1,35 @@
 package config
 
 import (
-	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 )
 
 const (
+	defaultRunAddrHost = "localhost"
+	defaultRunAddrPort = 8080
+	defaultLogLevel    = "INFO"
+
 	envRunAddress = "RUN_ADDRESS"
+	envLogLevel   = "LOG_LEVEL"
 )
 
-type RunAddr struct {
-	host string
-	port int
-}
-
-func newRunAddr(s string) (*RunAddr, error) {
-	values := strings.Split(s, ":")
-	if len(values) != 2 {
-		return nil, errors.New("invalid format")
-	}
-
-	port, err := strconv.Atoi(values[1])
-	if err != nil {
-		return nil, fmt.Errorf("invalid port: %w", err)
-	}
-
-	return &RunAddr{
-		host: values[0],
-		port: port,
-	}, nil
-}
-
-func (a RunAddr) Host() string {
-	return a.host
-}
-
-func (a RunAddr) Port() int {
-	return a.port
-}
-
 type Configuration struct {
-	runAddr RunAddr
+	runAddr  runAddr
+	logLevel string
 }
 
 func Parse() *Configuration {
 	var (
-		err  error
-		addr *RunAddr
+		err      error
+		logLevel string
 	)
+
+	addr := &runAddr{
+		host: defaultRunAddrHost,
+		port: defaultRunAddrPort,
+	}
 
 	flag.Func("a", "Server address: host:port", func(s string) error {
 		if addr, err = newRunAddr(s); err != nil {
@@ -61,6 +38,8 @@ func Parse() *Configuration {
 
 		return nil
 	})
+
+	flag.StringVar(&logLevel, "l", defaultLogLevel, "Log level")
 
 	flag.Parse()
 
@@ -71,13 +50,26 @@ func Parse() *Configuration {
 		}
 	}
 
+	if envLogLevelValue := os.Getenv(envLogLevel); envLogLevelValue != "" {
+		logLevel = envLogLevelValue
+	}
+
 	return &Configuration{
-		runAddr: *addr,
+		runAddr:  *addr,
+		logLevel: logLevel,
 	}
 }
 
-func (c Configuration) RunAddr() RunAddr {
-	return c.runAddr
+func (c Configuration) RunAddrHost() string {
+	return c.runAddr.host
+}
+
+func (c Configuration) RunAddrPort() int {
+	return c.runAddr.port
+}
+
+func (c Configuration) LogLevel() string {
+	return c.logLevel
 }
 
 func logEnvError(env, value string, err error) {

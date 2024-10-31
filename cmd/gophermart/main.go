@@ -2,28 +2,25 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/bjlag/go-loyalty/internal/infrastructure/config"
 )
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	c := config.Parse()
-	if c == nil {
-		log.Fatal("config is nil")
-	}
+	cfg := mustInitConfig()
+	log := mustInitLog(cfg.LogLevel())
+	defer log.Close()
 
-	app := newApp(
-		withServerAddr(c.RunAddr().Host(), c.RunAddr().Port()),
-	)
+	log.Infof("Log level %q", cfg.LogLevel())
+
+	addr := runAddr{host: cfg.RunAddrHost(), port: cfg.RunAddrPort()}
+	app := newApp(addr, log)
 
 	if err := app.run(ctx); err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("Failed to start app")
 	}
 }

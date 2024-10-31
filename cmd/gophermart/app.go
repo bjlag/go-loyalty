@@ -3,39 +3,31 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"golang.org/x/sync/errgroup"
-)
 
-const (
-	serverHost = "localhost"
-	serverPort = 8080
+	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 )
 
 type option func(a *application)
 
-func withServerAddr(host string, port int) option {
-	return func(a *application) {
-		a.serverAddr = &serverAddr{
-			host: host,
-			port: port,
-		}
-	}
-}
-
-type serverAddr struct {
+type runAddr struct {
 	host string
 	port int
 }
 
 type application struct {
-	serverAddr *serverAddr
+	runAddr runAddr
+	log     logger.Logger
 }
 
-func newApp(opts ...option) *application {
-	a := &application{}
+func newApp(runAddr runAddr, log logger.Logger, opts ...option) *application {
+	a := &application{
+		runAddr: runAddr,
+		log:     log,
+	}
+
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -44,25 +36,13 @@ func newApp(opts ...option) *application {
 }
 
 func (a application) run(ctx context.Context) error {
-	if a.serverAddr == nil {
-		a.serverAddr = &serverAddr{
-			host: serverHost,
-			port: serverPort,
-		}
-	} else {
-		if a.serverAddr.host == "" {
-			a.serverAddr.host = serverHost
-		}
-
-		if a.serverAddr.port == 0 {
-			a.serverAddr.port = serverPort
-		}
-	}
-
-	log.Printf("Starting server on %s:%d", a.serverAddr.host, a.serverAddr.port)
+	a.log.
+		WithField("host", a.runAddr.host).
+		WithField("port", a.runAddr.port).
+		Info("Starting server")
 
 	server := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", a.serverAddr.host, a.serverAddr.port),
+		Addr: fmt.Sprintf("%s:%d", a.runAddr.host, a.runAddr.port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Hello, world!"))
 		}),
@@ -77,7 +57,7 @@ func (a application) run(ctx context.Context) error {
 	g.Go(func() error {
 		<-gCtx.Done()
 
-		log.Println("Graceful shutting down server")
+		a.log.Info("Graceful shutting down server")
 
 		return server.Shutdown(context.Background())
 	})
