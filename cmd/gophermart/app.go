@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
 )
 
 type option func(a *application)
@@ -69,6 +70,10 @@ func (a application) run(ctx context.Context) error {
 
 func (a application) router() *chi.Mux {
 	r := chi.NewRouter()
+
+	r.Use(
+		middleware.LogRequest(a.log),
+	)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
