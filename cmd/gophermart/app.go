@@ -56,9 +56,7 @@ func (a application) run(ctx context.Context) error {
 
 	g.Go(func() error {
 		<-gCtx.Done()
-
 		a.log.Info("Graceful shutting down server")
-
 		return server.Shutdown(context.Background())
 	})
 

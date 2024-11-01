@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,6 +23,11 @@ func main() {
 	app := newApp(addr, log)
 
 	if err := app.run(ctx); err != nil {
-		log.WithError(err).Error("Failed to start app")
+		if errors.Is(err, http.ErrServerClosed) {
+			log.Info("Shut down")
+			return
+		}
+
+		log.WithError(err).Error("App error")
 	}
 }
