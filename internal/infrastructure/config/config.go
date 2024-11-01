@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 )
@@ -15,44 +16,24 @@ const (
 	envLogLevel   = "LOG_LEVEL"
 )
 
+var (
+	logLevel string
+	addr     *runAddr
+)
+
 type Configuration struct {
 	runAddr  runAddr
 	logLevel string
 }
 
 func Parse() *Configuration {
-	var (
-		err      error
-		logLevel string
-	)
-
-	addr := &runAddr{
+	addr = &runAddr{
 		host: defaultRunAddrHost,
 		port: defaultRunAddrPort,
 	}
 
-	flag.Func("a", "Server address: host:port", func(s string) error {
-		if addr, err = newRunAddr(s); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	flag.StringVar(&logLevel, "l", defaultLogLevel, "Log level")
-
-	flag.Parse()
-
-	if envRunAddrValue := os.Getenv(envRunAddress); envRunAddrValue != "" {
-		if addr, err = newRunAddr(envRunAddrValue); err != nil {
-			logEnvError(envRunAddress, envRunAddrValue, err)
-			return nil
-		}
-	}
-
-	if envLogLevelValue := os.Getenv(envLogLevel); envLogLevelValue != "" {
-		logLevel = envLogLevelValue
-	}
+	parseFlags()
+	parseEnvs()
 
 	return &Configuration{
 		runAddr:  *addr,
@@ -70,6 +51,40 @@ func (c Configuration) RunAddrPort() int {
 
 func (c Configuration) LogLevel() string {
 	return c.logLevel
+}
+
+func parseFlags() {
+	var err error
+
+	flag.StringVar(&logLevel, "l", defaultLogLevel, "Log level")
+	flag.Func(
+		"a",
+		fmt.Sprintf("Server address: host:port (default \"%s:%d\")", defaultRunAddrHost, defaultRunAddrPort),
+		func(s string) error {
+			if addr, err = newRunAddr(s); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
+
+	flag.Parse()
+}
+
+func parseEnvs() {
+	var err error
+
+	if value := os.Getenv(envLogLevel); value != "" {
+		logLevel = value
+	}
+
+	if value := os.Getenv(envRunAddress); value != "" {
+		if addr, err = newRunAddr(value); err != nil {
+			logEnvError(envRunAddress, value, err)
+			os.Exit(2)
+		}
+	}
 }
 
 func logEnvError(env, value string, err error) {
