@@ -11,7 +11,7 @@ import (
 
 func Gzip(log logger.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fn := func(w http.ResponseWriter, r *http.Request) {
 			ow := w
 
 			if isRequestCompressed(r) {
@@ -47,7 +47,9 @@ func Gzip(log logger.Logger) func(next http.Handler) http.Handler {
 			}
 
 			next.ServeHTTP(ow, r)
-		})
+		}
+
+		return http.HandlerFunc(fn)
 	}
 }
 
