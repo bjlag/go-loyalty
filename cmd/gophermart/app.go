@@ -73,6 +73,7 @@ func (a application) router() *chi.Mux {
 
 	r.Use(
 		middleware.LogRequest(a.log),
+		middleware.Gzip(a.log),
 	)
 
 	r.Route("/api", func(r chi.Router) {
