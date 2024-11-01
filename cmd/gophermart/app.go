@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
@@ -42,10 +44,8 @@ func (a application) run(ctx context.Context) error {
 		Info("Starting server")
 
 	server := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", a.runAddr.host, a.runAddr.port),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Hello, world!"))
-		}),
+		Addr:    fmt.Sprintf("%s:%d", a.runAddr.host, a.runAddr.port),
+		Handler: a.router(),
 	}
 
 	g, gCtx := errgroup.WithContext(ctx)
@@ -65,4 +65,30 @@ func (a application) run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (a application) router() *chi.Mux {
+	r := chi.NewRouter()
+
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+
+			resp := struct {
+				Title   string `json:"title"`
+				Version string `json:"version"`
+			}{
+				Title:   "Накопительная система лояльности 'Гофермарт'",
+				Version: "1.0",
+			}
+
+			err := json.NewEncoder(w).Encode(resp)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	return r
 }
