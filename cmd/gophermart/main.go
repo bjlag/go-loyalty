@@ -7,6 +7,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/bjlag/go-loyalty/internal/api/handler/register"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
+	register2 "github.com/bjlag/go-loyalty/internal/usecase/register"
 )
 
 func main() {
@@ -19,8 +24,14 @@ func main() {
 
 	log.Infof("Log level %q", cfg.LogLevel())
 
+	hasher := auth.NewHasher()
+	jwtBuilder := auth.NewJWTBuilder("secret", time.Hour*3)
+	usecase := register2.NewUsecase(hasher, jwtBuilder)
+
 	addr := runAddr{host: cfg.RunAddrHost(), port: cfg.RunAddrPort()}
-	app := newApp(addr, log)
+	app := newApp(addr, log,
+		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecase, log).Handle),
+	)
 
 	if err := app.run(ctx); err != nil {
 		if errors.Is(err, http.ErrServerClosed) {

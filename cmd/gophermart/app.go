@@ -13,19 +13,41 @@ import (
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
 )
 
-type option func(a *application)
-
 type runAddr struct {
 	host string
 	port int
 }
 
+type apiHandler struct {
+	method      string
+	path        string
+	handler     http.HandlerFunc
+	middlewares []func(next http.Handler) http.Handler
+}
+
 type application struct {
-	runAddr runAddr
-	log     logger.Logger
+	runAddr     runAddr
+	log         logger.Logger
+	apiHandlers []apiHandler
+}
+
+type option func(a *application)
+
+func withAPIHandler(method, path string, handler http.HandlerFunc, middlewares ...func(next http.Handler) http.Handler) option {
+	return func(a *application) {
+		a.apiHandlers = append(a.apiHandlers, apiHandler{
+			method:      method,
+			path:        path,
+			handler:     handler,
+			middlewares: middlewares,
+		})
+	}
 }
 
 func newApp(runAddr runAddr, log logger.Logger, opts ...option) *application {
+	// todo если лог не передан, то делаем по умолчанию log.
+	// todo run адрес передавать передавать через опции
+
 	a := &application{
 		runAddr: runAddr,
 		log:     log,
@@ -76,6 +98,10 @@ func (a application) router() *chi.Mux {
 		middleware.Gzip(a.log),
 	)
 
+	for _, h := range a.apiHandlers {
+		r.With(h.middlewares...).Method(h.method, h.path, h.handler)
+	}
+
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -90,7 +116,7 @@ func (a application) router() *chi.Mux {
 
 			err := json.NewEncoder(w).Encode(resp)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
 		})
