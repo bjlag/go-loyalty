@@ -7,11 +7,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/bjlag/go-loyalty/internal/api/handler/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
-	register2 "github.com/bjlag/go-loyalty/internal/usecase/register"
+	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/register"
 )
 
 func main() {
@@ -23,16 +22,19 @@ func main() {
 	defer log.Close()
 
 	log.Infof("Log level %q", cfg.LogLevel())
+	log.Infof("Run address \"%s:%d\"", cfg.RunAddrHost(), cfg.RunAddrPort())
+	log.Infof("JWT secret key %q", cfg.JWTSecretKey())
+	log.Infof("JWT expiration time %q", cfg.JWTExpTime())
 
 	hasher := auth.NewHasher()
-	jwtBuilder := auth.NewJWTBuilder("secret", time.Hour*3)
-	usecase := register2.NewUsecase(hasher, jwtBuilder)
+	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
+	usecaseRegister := ucRegister.NewUsecase(hasher, jwtBuilder)
 
 	app := newApp(
 		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),
 		withLogger(log),
 
-		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecase, log).Handle),
+		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
 	)
 
 	if err := app.run(ctx); err != nil {
