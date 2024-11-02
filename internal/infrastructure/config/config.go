@@ -14,11 +14,15 @@ const (
 	defaultLogLevel     = "INFO"
 	defaultJWTSecretKey = "secret"
 	defaultJWTExpTime   = 3 * time.Hour
+	defaultDatabaseURI  = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
+	defaultMigratePath  = "./migrations"
 
 	envRunAddress   = "RUN_ADDRESS"
 	envLogLevel     = "LOG_LEVEL"
 	envJWTSecretKey = "JWT_SECRET_KEY"
 	envJWTExpTime   = "JWT_EXP_TIME"
+	envDatabaseURI  = "DATABASE_URI"
+	envMigratePath  = "MIGRATE_SOURCE_PATH"
 )
 
 var (
@@ -26,6 +30,8 @@ var (
 	addr         *runAddr
 	jwtSecretKey string
 	jwtExpTime   time.Duration
+	databaseUri  string
+	migratePath  string
 )
 
 type Configuration struct {
@@ -33,6 +39,8 @@ type Configuration struct {
 	logLevel     string
 	jwtSecretKey string
 	jwtExpTime   time.Duration
+	databaseUri  string
+	migratePath  string
 }
 
 func Parse() *Configuration {
@@ -50,6 +58,8 @@ func Parse() *Configuration {
 		logLevel:     logLevel,
 		jwtSecretKey: jwtSecretKey,
 		jwtExpTime:   jwtExpTime,
+		databaseUri:  databaseUri,
+		migratePath:  migratePath,
 	}
 }
 
@@ -73,11 +83,21 @@ func (c Configuration) JWTExpTime() time.Duration {
 	return c.jwtExpTime
 }
 
+func (c Configuration) DatabaseUri() string {
+	return c.databaseUri
+}
+
+func (c Configuration) MigratePath() string {
+	return c.migratePath
+}
+
 func parseFlags() {
 	var err error
 
 	flag.StringVar(&logLevel, "l", defaultLogLevel, "Log level")
 	flag.StringVar(&jwtSecretKey, "s", defaultJWTSecretKey, "JWT secret key")
+	flag.StringVar(&databaseUri, "d", defaultDatabaseURI, "Database URI")
+	flag.StringVar(&migratePath, "m", defaultMigratePath, "Path to migration source files")
 	flag.Func("e", "JWT token expiration time (default 3h)", func(s string) error {
 		jwtExpTime, err = time.ParseDuration(s)
 		if err != nil {
@@ -112,12 +132,19 @@ func parseEnvs() {
 		jwtSecretKey = value
 	}
 
+	if value := os.Getenv(envDatabaseURI); value != "" {
+		databaseUri = value
+	}
+
+	if value := os.Getenv(envMigratePath); value != "" {
+		migratePath = value
+	}
+
 	if value := os.Getenv(envJWTExpTime); value != "" {
 		if jwtExpTime, err = time.ParseDuration(value); err != nil {
 			logEnvError(envJWTExpTime, value, err)
 			os.Exit(2)
 		}
-
 	}
 
 	if value := os.Getenv(envRunAddress); value != "" {
