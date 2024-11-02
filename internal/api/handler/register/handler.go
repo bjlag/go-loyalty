@@ -2,6 +2,8 @@ package register
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
@@ -25,13 +27,24 @@ func (h Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		if errors.Is(err, errInvalidEmail) || errors.Is(err, errInvalidPassword) {
+			h.log.WithError(err).Warning("invalid request")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
 		h.log.WithError(err).Error("error decoding request")
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	token, err := h.usecase.RegisterUser(r.Context(), req.Email, req.Password)
 	if err != nil {
+		if errors.Is(err, register.ErrUserAlreadyExists) {
+			http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
+			return
+		}
+
 		h.log.WithError(err).Error("error registering user")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -49,6 +62,7 @@ func (h Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	_, err = w.Write(data)
 	if err != nil {

@@ -10,6 +10,8 @@ import (
 
 	"github.com/bjlag/go-loyalty/internal/api/handler/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
 	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/register"
 )
 
@@ -31,9 +33,10 @@ func main() {
 	db := mustInitDB(cfg.DatabaseUri(), log)
 	mustUpMigrate(cfg.MigratePath(), db, log)
 
+	userRepo := repository.NewUserRepository(db)
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
-	usecaseRegister := ucRegister.NewUsecase(hasher, jwtBuilder)
+	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
 
 	app := newApp(
 		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),

@@ -3,11 +3,19 @@ package register
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 )
 
+const (
+	// database requirement
+	maxLenEmail = 50
+	// bcrypt: password length should not exceed 72 bytes
+	maxLenPassword = 72
+)
+
 var (
-	errInvalidLogin    = errors.New("invalid login")
+	errInvalidEmail    = errors.New("invalid email")
 	errInvalidPassword = errors.New("invalid password")
 )
 
@@ -32,11 +40,19 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 
 	var errs []error
 	if !isEmailValid(r.Email) {
-		errs = append(errs, errInvalidLogin)
+		errs = append(errs, errInvalidEmail)
+	}
+
+	if len(r.Email) > maxLenEmail {
+		errs = append(errs, fmt.Errorf("%w: email length exceeds 50 bytes", errInvalidEmail))
 	}
 
 	if r.Password == "" {
-		errs = append(errs, errInvalidPassword)
+		errs = append(errs, fmt.Errorf("%w: empty password", errInvalidPassword))
+	}
+
+	if len(r.Password) > maxLenPassword {
+		errs = append(errs, fmt.Errorf("%w: password length exceeds 72 bytes", errInvalidPassword))
 	}
 
 	return errors.Join(errs...)
