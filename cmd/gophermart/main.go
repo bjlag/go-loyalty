@@ -28,8 +28,10 @@ func main() {
 	jwtBuilder := auth.NewJWTBuilder("secret", time.Hour*3)
 	usecase := register2.NewUsecase(hasher, jwtBuilder)
 
-	addr := runAddr{host: cfg.RunAddrHost(), port: cfg.RunAddrPort()}
-	app := newApp(addr, log,
+	app := newApp(
+		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),
+		withLogger(log),
+
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecase, log).Handle),
 	)
 

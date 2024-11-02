@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,6 +13,10 @@ import (
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
 )
+
+const appVersion = "1.0.0"
+
+var errNoLogger = errors.New("no logger provided (use 'withLogger' option)")
 
 type runAddr struct {
 	host string
@@ -31,28 +36,8 @@ type application struct {
 	apiHandlers []apiHandler
 }
 
-type option func(a *application)
-
-func withAPIHandler(method, path string, handler http.HandlerFunc, middlewares ...func(next http.Handler) http.Handler) option {
-	return func(a *application) {
-		a.apiHandlers = append(a.apiHandlers, apiHandler{
-			method:      method,
-			path:        path,
-			handler:     handler,
-			middlewares: middlewares,
-		})
-	}
-}
-
-func newApp(runAddr runAddr, log logger.Logger, opts ...option) *application {
-	// todo если лог не передан, то делаем по умолчанию log.
-	// todo run адрес передавать передавать через опции
-
-	a := &application{
-		runAddr: runAddr,
-		log:     log,
-	}
-
+func newApp(opts ...option) *application {
+	a := &application{}
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -61,6 +46,10 @@ func newApp(runAddr runAddr, log logger.Logger, opts ...option) *application {
 }
 
 func (a application) run(ctx context.Context) error {
+	if a.log == nil {
+		return errNoLogger
+	}
+
 	a.log.
 		WithField("host", a.runAddr.host).
 		WithField("port", a.runAddr.port).
@@ -102,24 +91,22 @@ func (a application) router() *chi.Mux {
 		r.With(h.middlewares...).Method(h.method, h.path, h.handler)
 	}
 
-	r.Route("/api", func(r chi.Router) {
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
+	r.Get("/api", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 
-			resp := struct {
-				Title   string `json:"title"`
-				Version string `json:"version"`
-			}{
-				Title:   "Накопительная система лояльности 'Гофермарт'",
-				Version: "1.0",
-			}
+		resp := struct {
+			Title   string `json:"title"`
+			Version string `json:"version"`
+		}{
+			Title:   "Накопительная система лояльности 'Гофермарт'",
+			Version: appVersion,
+		}
 
-			err := json.NewEncoder(w).Encode(resp)
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-		})
+		err := json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	})
 
 	return r
