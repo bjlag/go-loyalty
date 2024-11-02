@@ -1,4 +1,4 @@
-package register
+package login
 
 import (
 	"encoding/json"
@@ -7,22 +7,22 @@ import (
 	"net/http"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
-	"github.com/bjlag/go-loyalty/internal/usecase/register"
+	"github.com/bjlag/go-loyalty/internal/usecase/login"
 )
 
 type Handler struct {
-	usecase *register.Usecase
+	usecase *login.Usecase
 	log     logger.Logger
 }
 
-func NewHandler(usecase *register.Usecase, log logger.Logger) *Handler {
+func NewHandler(usecase *login.Usecase, log logger.Logger) *Handler {
 	return &Handler{
 		usecase: usecase,
 		log:     log,
 	}
 }
 
-func (h Handler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	var req Request
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -38,14 +38,14 @@ func (h Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.usecase.RegisterUser(r.Context(), req.Login, req.Password)
+	token, err := h.usecase.LoginUser(r.Context(), req.Login, req.Password)
 	if err != nil {
-		if errors.Is(err, register.ErrUserAlreadyExists) {
-			http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
+		if errors.Is(err, login.ErrUserNotFound) || errors.Is(err, login.ErrWrongPassword) {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
-		h.log.WithError(err).Error("error registering user")
+		h.log.WithError(err).Error("error login user")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

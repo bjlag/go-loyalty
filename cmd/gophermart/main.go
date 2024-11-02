@@ -8,10 +8,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/bjlag/go-loyalty/internal/api/handler/login"
 	"github.com/bjlag/go-loyalty/internal/api/handler/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
+	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/login"
 	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/register"
 )
 
@@ -37,12 +39,14 @@ func main() {
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
 	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
+	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
 
 	app := newApp(
 		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),
 		withLogger(log),
 
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
+		withAPIHandler(http.MethodPost, "/api/user/login", login.NewHandler(usecaseLogin, log).Handle),
 	)
 
 	if err := app.run(ctx); err != nil {

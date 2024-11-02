@@ -29,8 +29,8 @@ func NewUsecase(userRepo *repository.UserRepository, guidGen *guid.Generator, ha
 	}
 }
 
-func (c Usecase) RegisterUser(ctx context.Context, login, password string) (string, error) {
-	user, err := c.userRepo.FindByEmail(ctx, login)
+func (u Usecase) RegisterUser(ctx context.Context, login, password string) (string, error) {
+	user, err := u.userRepo.FindByEmail(ctx, login)
 	if err != nil {
 		return "", err
 	}
@@ -38,21 +38,21 @@ func (c Usecase) RegisterUser(ctx context.Context, login, password string) (stri
 		return "", fmt.Errorf("%w: email %q", ErrUserAlreadyExists, login)
 	}
 
-	hashedPassword, err := auth.HashPassword(password)
+	hashedPassword, err := u.hasher.HashPassword(password)
 	if err != nil {
 		return "", err
 	}
 
 	user = &model.User{
-		GUID:     c.guidGen.Generate(),
+		GUID:     u.guidGen.Generate(),
 		Email:    login,
 		Password: hashedPassword,
 	}
 
-	err = c.userRepo.Insert(ctx, user)
+	err = u.userRepo.Insert(ctx, user)
 	if err != nil {
 		return "", err
 	}
 
-	return c.jwt.BuildJWTString(user.GUID)
+	return u.jwt.BuildJWTString(user.GUID)
 }
