@@ -1,3 +1,5 @@
+//go:generate mockgen -source ${GOFILE} -package mock -destination mock/logger_mock.go
+
 package logger
 
 type Logger interface {

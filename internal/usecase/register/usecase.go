@@ -14,13 +14,13 @@ import (
 var ErrUserAlreadyExists = errors.New("user already exists")
 
 type Usecase struct {
-	userRepo *repository.UserRepository
-	guidGen  *guid.Generator
-	hasher   *auth.Hasher
+	userRepo repository.UserRepository
+	guidGen  guid.IGenerator
+	hasher   auth.IHasher
 	jwt      *auth.JWTBuilder
 }
 
-func NewUsecase(userRepo *repository.UserRepository, guidGen *guid.Generator, hasher *auth.Hasher, jwt *auth.JWTBuilder) *Usecase {
+func NewUsecase(userRepo repository.UserRepository, guidGen guid.IGenerator, hasher auth.IHasher, jwt *auth.JWTBuilder) *Usecase {
 	return &Usecase{
 		userRepo: userRepo,
 		guidGen:  guidGen,

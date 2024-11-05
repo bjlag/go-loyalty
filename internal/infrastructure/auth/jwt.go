@@ -32,10 +32,5 @@ func (b JWTBuilder) BuildJWTString(userGUID string) (string, error) {
 		UserGUID: userGUID,
 	})
 
-	tokenString, err := token.SignedString([]byte(b.secretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
+	return token.SignedString([]byte(b.secretKey))
 }

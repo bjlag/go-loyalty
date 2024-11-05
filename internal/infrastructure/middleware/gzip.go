@@ -41,9 +41,9 @@ func Gzip(log logger.Logger) func(next http.Handler) http.Handler {
 					}
 				}()
 
-				ow = zw
-
 				zw.Header().Set("Content-Encoding", "gzip")
+
+				ow = zw
 			}
 
 			next.ServeHTTP(ow, r)

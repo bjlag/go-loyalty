@@ -1,6 +1,13 @@
+//go:generate mockgen -source ${GOFILE} -package mock -destination mock/hasher_mock.go
+
 package auth
 
 import "golang.org/x/crypto/bcrypt"
+
+type IHasher interface {
+	HashPassword(password string) (string, error)
+	ComparePasswords(hashedPassword, password string) bool
+}
 
 type Hasher struct {
 	cost int

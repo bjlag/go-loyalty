@@ -1,3 +1,5 @@
+//go:generate mockgen -source ${GOFILE} -package mock -destination mock/user_mock.go
+
 package repository
 
 import (
@@ -11,17 +13,22 @@ import (
 	"github.com/bjlag/go-loyalty/internal/model"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	FindByEmail(ctx context.Context, email string) (*model.User, error)
+	Insert(ctx context.Context, user *model.User) error
+}
+
+type UserPG struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) *UserRepository {
-	return &UserRepository{
+func NewUserRepository(db *sqlx.DB) *UserPG {
+	return &UserPG{
 		db: db,
 	}
 }
 
-func (r UserRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
+func (r UserPG) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := "SELECT * FROM users WHERE email = $1"
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -45,7 +52,7 @@ func (r UserRepository) FindByEmail(ctx context.Context, email string) (*model.U
 	return m.export(), nil
 }
 
-func (r UserRepository) Insert(ctx context.Context, user *model.User) error {
+func (r UserPG) Insert(ctx context.Context, user *model.User) error {
 	query := `INSERT INTO users (guid, email, password) VALUES ($1, $2, $3)`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {

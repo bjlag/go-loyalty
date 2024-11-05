@@ -28,12 +28,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		if errors.Is(err, errInvalidLogin) || errors.Is(err, errInvalidPassword) {
-			h.log.WithError(err).Warning("invalid request")
+			h.log.WithError(err).Warning("Invalid request")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
-		h.log.WithError(err).Error("error decoding request")
+		h.log.WithError(err).Error("Error decoding request")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -45,7 +45,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.log.WithError(err).Error("error login user")
+		h.log.WithError(err).Error("Error login user")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -56,7 +56,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(resp)
 	if err != nil {
-		h.log.WithError(err).Error("could not marshal response")
+		h.log.WithError(err).Error("Could not marshal response")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -66,7 +66,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(data)
 	if err != nil {
-		h.log.WithError(err).Error("could not write response")
+		h.log.WithError(err).Error("Could not write response")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }

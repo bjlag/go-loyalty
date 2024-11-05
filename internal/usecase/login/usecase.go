@@ -15,12 +15,12 @@ var (
 )
 
 type Usecase struct {
-	userRepo *repository.UserRepository
+	userRepo repository.UserRepository
 	hasher   *auth.Hasher
 	jwt      *auth.JWTBuilder
 }
 
-func NewUsecase(userRepo *repository.UserRepository, hasher *auth.Hasher, jwt *auth.JWTBuilder) *Usecase {
+func NewUsecase(userRepo repository.UserRepository, hasher *auth.Hasher, jwt *auth.JWTBuilder) *Usecase {
 	return &Usecase{
 		userRepo: userRepo,
 		hasher:   hasher,

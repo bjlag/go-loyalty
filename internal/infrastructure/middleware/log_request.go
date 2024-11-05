@@ -1,3 +1,5 @@
+//go:generate mockgen -package mock -destination mock/logger_mock.go github.com/bjlag/go-loyalty/internal/infrastructure/logger Logger
+
 package middleware
 
 import (
