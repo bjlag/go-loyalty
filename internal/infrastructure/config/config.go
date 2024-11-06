@@ -30,7 +30,7 @@ var (
 	addr         *runAddr
 	jwtSecretKey string
 	jwtExpTime   time.Duration
-	databaseUri  string
+	databaseURI  string
 	migratePath  string
 )
 
@@ -39,7 +39,7 @@ type Configuration struct {
 	logLevel     string
 	jwtSecretKey string
 	jwtExpTime   time.Duration
-	databaseUri  string
+	databaseURI  string
 	migratePath  string
 }
 
@@ -58,7 +58,7 @@ func Parse() *Configuration {
 		logLevel:     logLevel,
 		jwtSecretKey: jwtSecretKey,
 		jwtExpTime:   jwtExpTime,
-		databaseUri:  databaseUri,
+		databaseURI:  databaseURI,
 		migratePath:  migratePath,
 	}
 }
@@ -83,8 +83,8 @@ func (c Configuration) JWTExpTime() time.Duration {
 	return c.jwtExpTime
 }
 
-func (c Configuration) DatabaseUri() string {
-	return c.databaseUri
+func (c Configuration) DatabaseURI() string {
+	return c.databaseURI
 }
 
 func (c Configuration) MigratePath() string {
@@ -96,7 +96,7 @@ func parseFlags() {
 
 	flag.StringVar(&logLevel, "l", defaultLogLevel, "Log level")
 	flag.StringVar(&jwtSecretKey, "s", defaultJWTSecretKey, "JWT secret key")
-	flag.StringVar(&databaseUri, "d", defaultDatabaseURI, "Database URI")
+	flag.StringVar(&databaseURI, "d", defaultDatabaseURI, "Database URI")
 	flag.StringVar(&migratePath, "m", defaultMigratePath, "Path to migration source files")
 	flag.Func("e", "JWT token expiration time (default 3h)", func(s string) error {
 		jwtExpTime, err = time.ParseDuration(s)
@@ -133,7 +133,7 @@ func parseEnvs() {
 	}
 
 	if value := os.Getenv(envDatabaseURI); value != "" {
-		databaseUri = value
+		databaseURI = value
 	}
 
 	if value := os.Getenv(envMigratePath); value != "" {

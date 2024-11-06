@@ -34,7 +34,7 @@ func TestParse_Default(t *testing.T) {
 	assert.Equal(t, "INFO", got.LogLevel())
 	assert.Equal(t, "secret", got.JWTSecretKey())
 	assert.Equal(t, 3*time.Hour, got.JWTExpTime())
-	assert.Equal(t, "postgres://postgres:secret@localhost:5432/master?sslmode=disable", got.DatabaseUri())
+	assert.Equal(t, "postgres://postgres:secret@localhost:5432/master?sslmode=disable", got.DatabaseURI())
 	assert.Equal(t, "./migrations", got.MigratePath())
 }
 
@@ -60,7 +60,7 @@ func TestParse_Flags(t *testing.T) {
 	assert.Equal(t, "DEBUG", got.LogLevel())
 	assert.Equal(t, "new_secret", got.JWTSecretKey())
 	assert.Equal(t, 1*time.Hour, got.JWTExpTime())
-	assert.Equal(t, "new_db_uri", got.DatabaseUri())
+	assert.Equal(t, "new_db_uri", got.DatabaseURI())
 	assert.Equal(t, "new_migration_path", got.MigratePath())
 }
 
@@ -95,7 +95,7 @@ func TestParse_Envs(t *testing.T) {
 	assert.Equal(t, "DEBUG", got.LogLevel())
 	assert.Equal(t, "new_secret", got.JWTSecretKey())
 	assert.Equal(t, 1*time.Hour, got.JWTExpTime())
-	assert.Equal(t, "new_db_uri", got.DatabaseUri())
+	assert.Equal(t, "new_db_uri", got.DatabaseURI())
 	assert.Equal(t, "new_migration_path", got.MigratePath())
 
 }
@@ -139,7 +139,7 @@ func TestParse_EnvsOverwriteFlags(t *testing.T) {
 	assert.Equal(t, "ERROR", got.LogLevel())
 	assert.Equal(t, "new_secret_from_env", got.JWTSecretKey())
 	assert.Equal(t, 5*time.Hour, got.JWTExpTime())
-	assert.Equal(t, "new_db_uri_from_env", got.DatabaseUri())
+	assert.Equal(t, "new_db_uri_from_env", got.DatabaseURI())
 	assert.Equal(t, "new_migration_path_from_env", got.MigratePath())
 
 }

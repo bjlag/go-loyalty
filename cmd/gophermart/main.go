@@ -29,10 +29,10 @@ func main() {
 	log.Infof("Run address \"%s:%d\"", cfg.RunAddrHost(), cfg.RunAddrPort())
 	log.Infof("JWT secret key %q", cfg.JWTSecretKey())
 	log.Infof("JWT expiration time %q", cfg.JWTExpTime())
-	log.Infof("Database URI %q", cfg.DatabaseUri())
+	log.Infof("Database URI %q", cfg.DatabaseURI())
 	log.Infof("Path to migration source files %q", cfg.MigratePath())
 
-	db := mustInitDB(cfg.DatabaseUri(), log)
+	db := mustInitDB(cfg.DatabaseURI(), log)
 	mustUpMigrate(cfg.MigratePath(), db, log)
 
 	userRepo := repository.NewUserRepository(db)
