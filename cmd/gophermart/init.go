@@ -47,9 +47,14 @@ func mustInitDB(dsn string, log logger.Logger) *sqlx.DB {
 
 func mustUpMigrate(source string, db *sqlx.DB, log logger.Logger) {
 	driver, err := pgx.WithInstance(db.DB, &pgx.Config{})
+	if err != nil {
+		log.WithError(err).Error("Error creating database driver")
+		os.Exit(1)
+	}
+
 	migrate, err := migrator.NewMigrator(source, driver)
 	if err != nil {
-		log.WithError(err).Error("Error initializing migrator")
+		log.WithError(err).WithField("source", source).Error("Error initializing migrator")
 		os.Exit(1)
 	}
 
