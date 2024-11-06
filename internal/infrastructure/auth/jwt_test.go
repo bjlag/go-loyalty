@@ -19,6 +19,7 @@ func TestJWTBuilder_BuildJWTString(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		b := auth.NewJWTBuilder(secretKey, time.Hour)
 		got, err := b.BuildJWTString(userGUID)
+		require.NoError(t, err)
 
 		token, err := jwt.Parse(got, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
