@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 )
 
 const (
 	// database requirement
-	maxLenEmail = 50
+	maxLenLogin = 20
 	// bcrypt: password length should not exceed 72 bytes
 	maxLenPassword = 72
 )
@@ -39,11 +38,11 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	}
 
 	var errs []error
-	if !isEmailValid(r.Login) {
-		errs = append(errs, errInvalidLogin)
+	if r.Login == "" {
+		errs = append(errs, fmt.Errorf("%w: empty login", errInvalidLogin))
 	}
 
-	if len(r.Login) > maxLenEmail {
+	if len(r.Login) > maxLenLogin {
 		errs = append(errs, fmt.Errorf("%w: email length exceeds 50 bytes", errInvalidLogin))
 	}
 
@@ -56,9 +55,4 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	}
 
 	return errors.Join(errs...)
-}
-
-func isEmailValid(email string) bool {
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	return emailRegex.MatchString(email)
 }

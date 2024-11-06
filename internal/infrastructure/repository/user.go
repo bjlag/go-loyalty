@@ -14,7 +14,7 @@ import (
 )
 
 type UserRepository interface {
-	FindByEmail(ctx context.Context, email string) (*model.User, error)
+	FindByLogin(ctx context.Context, login string) (*model.User, error)
 	Insert(ctx context.Context, user *model.User) error
 }
 
@@ -28,8 +28,8 @@ func NewUserRepository(db *sqlx.DB) *UserPG {
 	}
 }
 
-func (r UserPG) FindByEmail(ctx context.Context, email string) (*model.User, error) {
-	query := "SELECT * FROM users WHERE email = $1"
+func (r UserPG) FindByLogin(ctx context.Context, login string) (*model.User, error) {
+	query := "SELECT * FROM users WHERE login = $1"
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
@@ -39,8 +39,8 @@ func (r UserPG) FindByEmail(ctx context.Context, email string) (*model.User, err
 	}()
 
 	var m user
-	row := stmt.QueryRowContext(ctx, email)
-	err = row.Scan(&m.GUID, &m.Email, &m.Password)
+	row := stmt.QueryRowContext(ctx, login)
+	err = row.Scan(&m.GUID, &m.Login, &m.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -53,7 +53,7 @@ func (r UserPG) FindByEmail(ctx context.Context, email string) (*model.User, err
 }
 
 func (r UserPG) Insert(ctx context.Context, user *model.User) error {
-	query := `INSERT INTO users (guid, email, password) VALUES ($1, $2, $3)`
+	query := `INSERT INTO users (guid, login, password) VALUES ($1, $2, $3)`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to prepare query: %w", err)
@@ -63,7 +63,7 @@ func (r UserPG) Insert(ctx context.Context, user *model.User) error {
 	}()
 
 	//m := userFromModel(user)
-	_, err = stmt.ExecContext(ctx, user.GUID, user.Email, user.Password)
+	_, err = stmt.ExecContext(ctx, user.GUID, user.Login, user.Password)
 	if err != nil {
 		return fmt.Errorf("failed to save user: %w", err)
 	}

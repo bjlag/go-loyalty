@@ -53,12 +53,12 @@ func TestHandler_Handle(t *testing.T) {
 
 					user := &model.User{
 						GUID:     "41d2f86c-6ce5-4732-a485-6d09d7a9b3f7",
-						Email:    "email@email.ru",
+						Login:    "abcd",
 						Password: "$2a$10$wEwL0jTt5ryuBRzCv56A3eq0odey9nSFrcuqqubJttyLjAw3SF2/.",
 					}
 
 					gomock.InOrder(
-						repUserMock.EXPECT().FindByEmail(gomock.Any(), "email@email.ru").Return(nil, nil),
+						repUserMock.EXPECT().FindByLogin(gomock.Any(), "abcd").Return(nil, nil),
 						repUserMock.EXPECT().Insert(gomock.Any(), user).Return(nil),
 					)
 
@@ -76,7 +76,7 @@ func TestHandler_Handle(t *testing.T) {
 				},
 				log: mockLog.NewMockLogger,
 			},
-			body: `{"login": "email@email.ru", "password": "123456"}`,
+			body: `{"login": "abcd", "password": "123456"}`,
 			want: want{
 				status: http.StatusOK,
 				err:    false,

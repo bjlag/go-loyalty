@@ -2,6 +2,6 @@ package model
 
 type User struct {
 	GUID     string
-	Email    string
+	Login    string
 	Password string
 }

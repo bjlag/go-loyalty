@@ -29,7 +29,7 @@ func NewUsecase(userRepo repository.UserRepository, hasher *auth.Hasher, jwt *au
 }
 
 func (u *Usecase) LoginUser(ctx context.Context, login, password string) (string, error) {
-	user, err := u.userRepo.FindByEmail(ctx, login)
+	user, err := u.userRepo.FindByLogin(ctx, login)
 	if err != nil {
 		return "", err
 	}

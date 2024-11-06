@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 )
 
 var (
@@ -32,8 +31,8 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	}
 
 	var errs []error
-	if !isEmailValid(r.Login) {
-		errs = append(errs, errInvalidLogin)
+	if r.Login == "" {
+		errs = append(errs, fmt.Errorf("%w: empty login", errInvalidLogin))
 	}
 
 	if r.Password == "" {
@@ -41,9 +40,4 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	}
 
 	return errors.Join(errs...)
-}
-
-func isEmailValid(email string) bool {
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	return emailRegex.MatchString(email)
 }

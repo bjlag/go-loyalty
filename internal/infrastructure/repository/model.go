@@ -4,14 +4,14 @@ import "github.com/bjlag/go-loyalty/internal/model"
 
 type user struct {
 	GUID     string `db:"guid"`
-	Email    string `db:"email"`
+	Login    string `db:"login"`
 	Password string `db:"password"`
 }
 
 func userFromModel(model model.User) *user {
 	return &user{
 		GUID:     model.GUID,
-		Email:    model.Email,
+		Login:    model.Login,
 		Password: model.Password,
 	}
 }
@@ -19,7 +19,7 @@ func userFromModel(model model.User) *user {
 func (u user) export() *model.User {
 	return &model.User{
 		GUID:     u.GUID,
-		Email:    u.Email,
+		Login:    u.Login,
 		Password: u.Password,
 	}
 }

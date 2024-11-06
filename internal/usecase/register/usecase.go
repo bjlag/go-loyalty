@@ -30,7 +30,7 @@ func NewUsecase(userRepo repository.UserRepository, guidGen guid.IGenerator, has
 }
 
 func (u Usecase) RegisterUser(ctx context.Context, login, password string) (string, error) {
-	user, err := u.userRepo.FindByEmail(ctx, login)
+	user, err := u.userRepo.FindByLogin(ctx, login)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +45,7 @@ func (u Usecase) RegisterUser(ctx context.Context, login, password string) (stri
 
 	user = &model.User{
 		GUID:     u.guidGen.Generate(),
-		Email:    login,
+		Login:    login,
 		Password: hashedPassword,
 	}
 
