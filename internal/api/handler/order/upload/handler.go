@@ -2,36 +2,37 @@ package upload
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/validator"
+	"github.com/bjlag/go-loyalty/internal/model"
 )
 
 type Handler struct {
 	jwt *auth.JWTBuilder
+	rep repository.AccrualRepository
 	log logger.Logger
 }
 
-func NewHandler(jwt *auth.JWTBuilder, log logger.Logger) *Handler {
+func NewHandler(jwt *auth.JWTBuilder, rep repository.AccrualRepository, log logger.Logger) *Handler {
 	return &Handler{
 		jwt: jwt,
+		rep: rep,
 		log: log,
 	}
 }
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
-	userGUID, err := auth.UserGUIDFromContext(r.Context())
+	ctx := r.Context()
+	userGUID, err := auth.UserGUIDFromContext(ctx)
 	if err != nil {
-		h.log.WithError(err).Error("could not get user GUID from context")
+		h.log.WithError(err).Error("Could not get user GUID from context")
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-
-	fmt.Fprint(w, userGUID)
-	fmt.Fprint(w, "\n")
 
 	var b bytes.Buffer
 
@@ -49,9 +50,18 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo валидация номера заказа
-	// todo запись в базу заказа
+	// todo проверить есть ли у этого пользователя этот заказ в обработке 200
+	// todo проверить если ли этот заказ в обработке в принципе 409
+
+	accrual := model.NewAccrual(number, userGUID)
+	err = h.rep.Insert(ctx, accrual)
+	if err != nil {
+		h.log.WithError(err).Error("Error inserting accrual")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
 	// todo асинхронное получение балов лояльности по заказу
 
-	fmt.Fprint(w, number)
+	w.WriteHeader(http.StatusAccepted)
 }
