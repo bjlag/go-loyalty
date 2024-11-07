@@ -13,15 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bjlag/go-loyalty/internal/api/handler/login"
-	"github.com/bjlag/go-loyalty/internal/api/handler/register"
+	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
+	"github.com/bjlag/go-loyalty/internal/api/handler/user/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	mockAuth "github.com/bjlag/go-loyalty/internal/infrastructure/auth/mock"
 	mockGuid "github.com/bjlag/go-loyalty/internal/infrastructure/guid/mock"
 	mockLog "github.com/bjlag/go-loyalty/internal/infrastructure/logger/mock"
 	mockRep "github.com/bjlag/go-loyalty/internal/infrastructure/repository/mock"
 	"github.com/bjlag/go-loyalty/internal/model"
-	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/register"
+	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
 )
 
 func TestHandler_Handle(t *testing.T) {
