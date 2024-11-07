@@ -7,6 +7,7 @@ import (
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/validator"
 )
 
 type Handler struct {
@@ -41,10 +42,16 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order := b.String()
+	number := b.String()
+	if !validator.CheckLuhn(number) {
+		h.log.WithField("number", number).Warning("Order number is invalid")
+		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+		return
+	}
+
 	// todo валидация номера заказа
 	// todo запись в базу заказа
 	// todo асинхронное получение балов лояльности по заказу
 
-	fmt.Fprint(w, order)
+	fmt.Fprint(w, number)
 }
