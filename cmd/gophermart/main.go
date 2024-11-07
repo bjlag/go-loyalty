@@ -38,6 +38,8 @@ func main() {
 	mustUpMigrate(cfg.MigratePath(), db, log)
 
 	userRepo := repository.NewUserRepository(db)
+	accrualRepo := repository.NewAccrualPG(db)
+
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
 	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
@@ -49,7 +51,7 @@ func main() {
 
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
 		withAPIHandler(http.MethodPost, "/api/user/login", login.NewHandler(usecaseLogin, log).Handle),
-		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(jwtBuilder, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(jwtBuilder, accrualRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 	)
 
 	if err := app.run(ctx); err != nil {
