@@ -8,13 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/bjlag/go-loyalty/internal/api/handler/login"
-	"github.com/bjlag/go-loyalty/internal/api/handler/register"
+	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
+	"github.com/bjlag/go-loyalty/internal/api/handler/user/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
-	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/login"
-	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/register"
+	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/user/login"
+	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
 )
 
 func main() {

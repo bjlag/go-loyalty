@@ -3,6 +3,8 @@ package login_test
 import (
 	"encoding/json"
 	"fmt"
+	login2 "github.com/bjlag/go-loyalty/internal/api/handler/user/login"
+	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/user/login"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,12 +15,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bjlag/go-loyalty/internal/api/handler/login"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger/mock"
 	mockRep "github.com/bjlag/go-loyalty/internal/infrastructure/repository/mock"
 	"github.com/bjlag/go-loyalty/internal/model"
-	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/login"
 )
 
 func TestHandler_Handle(t *testing.T) {
@@ -90,7 +90,7 @@ func TestHandler_Handle(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			usecase := ucLogin.NewUsecase(tt.args.rep(ctrl), hasher, jwtBuilder)
-			handler := http.HandlerFunc(login.NewHandler(usecase, tt.args.log(ctrl)).Handle)
+			handler := http.HandlerFunc(login2.NewHandler(usecase, tt.args.log(ctrl)).Handle)
 
 			srv := httptest.NewServer(handler)
 			defer srv.Close()
@@ -105,7 +105,7 @@ func TestHandler_Handle(t *testing.T) {
 			require.NoError(t, err, "error making HTTP request")
 
 			if !tt.want.err {
-				var respUnmarshalled login.Response
+				var respUnmarshalled login2.Response
 				err = json.Unmarshal(resp.Body(), &respUnmarshalled)
 				require.NoError(t, err, "error unmarshaling HTTP response body")
 
