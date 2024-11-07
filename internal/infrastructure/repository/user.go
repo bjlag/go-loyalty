@@ -22,7 +22,7 @@ type UserPG struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) *UserPG {
+func NewUserPG(db *sqlx.DB) *UserPG {
 	return &UserPG{
 		db: db,
 	}

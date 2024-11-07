@@ -37,7 +37,7 @@ func main() {
 	db := mustInitDB(cfg.DatabaseURI(), log)
 	mustUpMigrate(cfg.MigratePath(), db, log)
 
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserPG(db)
 	accrualRepo := repository.NewAccrualPG(db)
 
 	hasher := auth.NewHasher()
