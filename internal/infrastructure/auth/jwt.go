@@ -1,10 +1,14 @@
 package auth
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
+
+var ErrInvalidToken = errors.New("invalid token")
 
 type claims struct {
 	jwt.RegisteredClaims
@@ -33,4 +37,24 @@ func (b JWTBuilder) BuildJWTString(userGUID string) (string, error) {
 	})
 
 	return token.SignedString([]byte(b.secretKey))
+}
+
+func (b JWTBuilder) GetUserGUID(tokenString string) (string, error) {
+	c := &claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, c, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return []byte(b.secretKey), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if !token.Valid {
+		return "", ErrInvalidToken
+	}
+
+	return c.UserGUID, nil
 }
