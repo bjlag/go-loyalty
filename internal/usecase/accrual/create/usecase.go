@@ -25,24 +25,23 @@ func NewUsecase(repo repository.AccrualRepository) *Usecase {
 	}
 }
 
-func (u *Usecase) CreateAccrual(ctx context.Context, userGUID, orderNumber string) error {
-	if !validator.CheckLuhn(orderNumber) {
+func (u *Usecase) CreateAccrual(ctx context.Context, accrual *model.Accrual) error {
+	if !validator.CheckLuhn(accrual.OrderNumber) {
 		return ErrInvalidOrderNumber
 	}
 
-	if accrual, err := u.repo.AccrualByOrderNumber(ctx, orderNumber); err != nil || accrual != nil {
+	if existAccrual, err := u.repo.AccrualByOrderNumber(ctx, accrual.OrderNumber); err != nil || existAccrual != nil {
 		if err != nil {
 			return err
 		}
 
-		if accrual.UserGUID != userGUID {
+		if existAccrual.UserGUID != accrual.UserGUID {
 			return ErrAnotherUserHasAlreadyRegisteredOrder
 		}
 
 		return ErrOrderAlreadyExists
 	}
 
-	accrual := model.NewAccrual(orderNumber, userGUID)
 	err := u.repo.Insert(ctx, accrual)
 	if err != nil {
 		return err
