@@ -1,3 +1,5 @@
+//go:generate mockgen -source ${GOFILE} -package mock -destination mock/accrual_mock.go
+
 package repository
 
 import (
