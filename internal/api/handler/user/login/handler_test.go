@@ -26,8 +26,8 @@ func TestHandler_Handle(t *testing.T) {
 	jwtBuilder := auth.NewJWTBuilder("secret", 1*time.Hour)
 
 	type args struct {
-		rep func(ctrl *gomock.Controller) *mockRep.MockUserRepository
-		log func(ctrl *gomock.Controller) *mock.MockLogger
+		repo func(ctrl *gomock.Controller) *mockRep.MockUserRepository
+		log  func(ctrl *gomock.Controller) *mock.MockLogger
 	}
 
 	type want struct {
@@ -44,7 +44,7 @@ func TestHandler_Handle(t *testing.T) {
 		{
 			name: "success",
 			args: args{
-				rep: func(ctrl *gomock.Controller) *mockRep.MockUserRepository {
+				repo: func(ctrl *gomock.Controller) *mockRep.MockUserRepository {
 					repUserMock := mockRep.NewMockUserRepository(ctrl)
 					repUserMock.EXPECT().FindByLogin(gomock.Any(), "abcd").Return(&model.User{
 						GUID:     "41d2f86c-6ce5-4732-a485-6d09d7a9b3f7",
@@ -65,7 +65,7 @@ func TestHandler_Handle(t *testing.T) {
 		{
 			name: "wrong_password",
 			args: args{
-				rep: func(ctrl *gomock.Controller) *mockRep.MockUserRepository {
+				repo: func(ctrl *gomock.Controller) *mockRep.MockUserRepository {
 					repUserMock := mockRep.NewMockUserRepository(ctrl)
 					repUserMock.EXPECT().FindByLogin(gomock.Any(), "abcd").Return(&model.User{
 						GUID:     "41d2f86c-6ce5-4732-a485-6d09d7a9b3f7",
@@ -89,7 +89,7 @@ func TestHandler_Handle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
-			usecase := ucLogin.NewUsecase(tt.args.rep(ctrl), hasher, jwtBuilder)
+			usecase := ucLogin.NewUsecase(tt.args.repo(ctrl), hasher, jwtBuilder)
 			handler := http.HandlerFunc(login2.NewHandler(usecase, tt.args.log(ctrl)).Handle)
 
 			srv := httptest.NewServer(handler)
