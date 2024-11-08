@@ -2,26 +2,23 @@ package upload
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
-	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
-	"github.com/bjlag/go-loyalty/internal/infrastructure/validator"
-	"github.com/bjlag/go-loyalty/internal/model"
+	"github.com/bjlag/go-loyalty/internal/usecase/accrual/create"
 )
 
 type Handler struct {
-	jwt *auth.JWTBuilder
-	rep repository.AccrualRepository
-	log logger.Logger
+	usecase *create.Usecase
+	log     logger.Logger
 }
 
-func NewHandler(jwt *auth.JWTBuilder, rep repository.AccrualRepository, log logger.Logger) *Handler {
+func NewHandler(usecase *create.Usecase, log logger.Logger) *Handler {
 	return &Handler{
-		jwt: jwt,
-		rep: rep,
-		log: log,
+		usecase: usecase,
+		log:     log,
 	}
 }
 
@@ -43,38 +40,22 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	number := b.String()
-	if !validator.CheckLuhn(number) {
-		h.log.WithField("number", number).Warning("Order number is invalid")
-		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
-		return
-	}
+	orderNumber := b.String()
 
-	if accrual, err := h.rep.AccrualByOrderNumber(ctx, number); err != nil || accrual != nil {
-		if err != nil {
-			h.log.WithError(err).Error("Error getting user accrual")
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if err := h.usecase.CreateAccrual(ctx, userGUID, orderNumber); err != nil {
+		switch {
+		case errors.Is(err, create.ErrAnotherUserHasAlreadyRegisteredOrder):
+			http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
+			return
+		case errors.Is(err, create.ErrOrderAlreadyExists):
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		if accrual.UserGUID != userGUID {
-			w.WriteHeader(http.StatusConflict)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	accrual := model.NewAccrual(number, userGUID)
-	err = h.rep.Insert(ctx, accrual)
-	if err != nil {
-		h.log.WithError(err).Error("Error inserting accrual")
+		h.log.WithError(err).Error("Error creating accrual")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-
-	// todo асинхронное получение балов лояльности по заказу
 
 	w.WriteHeader(http.StatusAccepted)
 }
