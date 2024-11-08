@@ -29,7 +29,7 @@ func NewUserPG(db *sqlx.DB) *UserPG {
 }
 
 func (r UserPG) FindByLogin(ctx context.Context, login string) (*model.User, error) {
-	query := "SELECT * FROM users WHERE login = $1"
+	query := "SELECT guid, login, password FROM users WHERE login = $1"
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
