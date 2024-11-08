@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 )
 
@@ -19,6 +21,7 @@ func LogRequest(log logger.Logger) func(next http.Handler) http.Handler {
 			duration := time.Since(start)
 
 			log.
+				WithField("request_id", chiMiddleware.GetReqID(r.Context())).
 				WithField("method", r.Method).
 				WithField("uri", r.URL.Path).
 				WithField("status", dw.data.status).

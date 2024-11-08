@@ -12,6 +12,7 @@ import (
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 const appVersion = "1.0.0"
@@ -83,6 +84,7 @@ func (a application) router() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(
+		chiMiddleware.RequestID,
 		middleware.LogRequest(a.log),
 		middleware.Gzip(a.log),
 	)
