@@ -15,6 +15,7 @@ import (
 	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
+	ucCreateAccrual "github.com/bjlag/go-loyalty/internal/usecase/accrual/create"
 	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/user/login"
 	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
 )
@@ -42,8 +43,10 @@ func main() {
 
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
+
 	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
 	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
+	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
 
 	app := newApp(
 		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),
@@ -51,7 +54,7 @@ func main() {
 
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
 		withAPIHandler(http.MethodPost, "/api/user/login", login.NewHandler(usecaseLogin, log).Handle),
-		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(jwtBuilder, accrualRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(usecaseCreateAccrual, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 	)
 
 	if err := app.run(ctx); err != nil {
