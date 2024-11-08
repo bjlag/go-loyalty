@@ -12,18 +12,18 @@ const (
 )
 
 type Accrual struct {
-	Number     string
-	UserGUID   string
-	Status     AccrualStatus
-	Accrual    uint
-	UploadedAt time.Time
+	OrderNumber string
+	UserGUID    string
+	Status      AccrualStatus
+	Accrual     uint
+	UploadedAt  time.Time
 }
 
-func NewAccrual(number, userGUID string) *Accrual {
+func NewAccrual(orderNumber, userGUID string) *Accrual {
 	return &Accrual{
-		Number:     number,
-		UserGUID:   userGUID,
-		Status:     New,
-		UploadedAt: time.Now(),
+		OrderNumber: orderNumber,
+		UserGUID:    userGUID,
+		Status:      New,
+		UploadedAt:  time.Now(),
 	}
 }
