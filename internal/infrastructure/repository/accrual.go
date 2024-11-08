@@ -27,7 +27,7 @@ func NewAccrualPG(db *sqlx.DB) *AccrualPG {
 }
 
 func (r AccrualPG) AccrualByOrderNumber(ctx context.Context, orderNumber string) (*model.Accrual, error) {
-	query := "SELECT number, user_guid, status, accrual, uploaded_at FROM accruals WHERE number = $1"
+	query := "SELECT order_number, user_guid, status, accrual, uploaded_at FROM accruals WHERE order_number = $1"
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
@@ -38,7 +38,7 @@ func (r AccrualPG) AccrualByOrderNumber(ctx context.Context, orderNumber string)
 
 	var m accrual
 	row := stmt.QueryRowContext(ctx, orderNumber)
-	err = row.Scan(&m.Number, &m.UserGUID, &m.Status, &m.Accrual, &m.UploadedAt)
+	err = row.Scan(&m.OrderNumber, &m.UserGUID, &m.Status, &m.Accrual, &m.UploadedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -51,7 +51,7 @@ func (r AccrualPG) AccrualByOrderNumber(ctx context.Context, orderNumber string)
 }
 
 func (r AccrualPG) Insert(ctx context.Context, accrual *model.Accrual) error {
-	query := `INSERT INTO accruals (number, user_guid, status, accrual, uploaded_at) VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT INTO accruals (order_number, user_guid, status, accrual, uploaded_at) VALUES ($1, $2, $3, $4, $5)`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to prepare query: %w", err)
@@ -60,7 +60,7 @@ func (r AccrualPG) Insert(ctx context.Context, accrual *model.Accrual) error {
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.ExecContext(ctx, accrual.Number, accrual.UserGUID, accrual.Status, accrual.Accrual, accrual.UploadedAt)
+	_, err = stmt.ExecContext(ctx, accrual.OrderNumber, accrual.UserGUID, accrual.Status, accrual.Accrual, accrual.UploadedAt)
 	if err != nil {
 		return fmt.Errorf("failed to save accrual: %w", err)
 	}
