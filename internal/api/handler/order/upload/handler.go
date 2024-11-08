@@ -50,8 +50,21 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo проверить есть ли у этого пользователя этот заказ в обработке 200
-	// todo проверить если ли этот заказ в обработке в принципе 409
+	if accrual, err := h.rep.AccrualByOrderNumber(ctx, number); err != nil || accrual != nil {
+		if err != nil {
+			h.log.WithError(err).Error("Error getting user accrual")
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		if accrual.UserGUID != userGUID {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	accrual := model.NewAccrual(number, userGUID)
 	err = h.rep.Insert(ctx, accrual)
