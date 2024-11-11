@@ -11,6 +11,20 @@ const (
 	Processed
 )
 
+func (s AccrualStatus) String() string {
+	switch s {
+	case New:
+		return "New"
+	case Processing:
+		return "Processing"
+	case Invalid:
+		return "Invalid"
+	case Processed:
+		return "Processed"
+	}
+	return "Unknown"
+}
+
 type Accrual struct {
 	OrderNumber string
 	UserGUID    string

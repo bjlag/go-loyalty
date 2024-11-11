@@ -50,6 +50,21 @@ func (mr *MockAccrualRepositoryMockRecorder) AccrualByOrderNumber(ctx, orderNumb
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualByOrderNumber", reflect.TypeOf((*MockAccrualRepository)(nil).AccrualByOrderNumber), ctx, orderNumber)
 }
 
+// AccrualsByUser mocks base method.
+func (m *MockAccrualRepository) AccrualsByUser(ctx context.Context, userGUID string) ([]model.Accrual, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AccrualsByUser", ctx, userGUID)
+	ret0, _ := ret[0].([]model.Accrual)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AccrualsByUser indicates an expected call of AccrualsByUser.
+func (mr *MockAccrualRepositoryMockRecorder) AccrualsByUser(ctx, userGUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualsByUser", reflect.TypeOf((*MockAccrualRepository)(nil).AccrualsByUser), ctx, userGUID)
+}
+
 // Insert mocks base method.
 func (m *MockAccrualRepository) Insert(ctx context.Context, accrual *model.Accrual) error {
 	m.ctrl.T.Helper()

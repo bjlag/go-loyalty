@@ -15,6 +15,7 @@ import (
 
 type AccrualRepository interface {
 	AccrualByOrderNumber(ctx context.Context, orderNumber string) (*model.Accrual, error)
+	AccrualsByUser(ctx context.Context, userGUID string) ([]model.Accrual, error)
 	Insert(ctx context.Context, accrual *model.Accrual) error
 }
 
@@ -50,6 +51,51 @@ func (r AccrualPG) AccrualByOrderNumber(ctx context.Context, orderNumber string)
 	}
 
 	return m.export(), nil
+}
+
+func (r AccrualPG) AccrualsByUser(ctx context.Context, orderNumber string) ([]model.Accrual, error) {
+	query := "SELECT order_number, user_guid, status, accrual, uploaded_at FROM accruals WHERE user_guid = $1"
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %w", err)
+	}
+	defer func() {
+		_ = stmt.Close()
+	}()
+
+	rows, err := stmt.QueryContext(ctx, orderNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute a prepared query: %w", err)
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	var models []accrual
+	for rows.Next() {
+		var m accrual
+		err = rows.Scan(&m.OrderNumber, &m.UserGUID, &m.Status, &m.Accrual, &m.UploadedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan: %w", err)
+		}
+
+		models = append(models, m)
+	}
+
+	if len(models) == 0 {
+		return nil, nil
+	}
+
+	result := make([]model.Accrual, 0, len(models))
+	for _, m := range models {
+		result = append(result, *m.export())
+	}
+
+	return result, nil
 }
 
 func (r AccrualPG) Insert(ctx context.Context, accrual *model.Accrual) error {

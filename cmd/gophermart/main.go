@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/bjlag/go-loyalty/internal/api/handler/order/list"
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/upload"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/register"
@@ -55,6 +56,7 @@ func main() {
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
 		withAPIHandler(http.MethodPost, "/api/user/login", login.NewHandler(usecaseLogin, log).Handle),
 		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(usecaseCreateAccrual, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+		withAPIHandler(http.MethodGet, "/api/user/orders", list.NewHandler(accrualRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 	)
 
 	if err := app.run(ctx); err != nil {
