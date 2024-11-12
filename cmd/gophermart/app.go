@@ -6,12 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/bjlag/go-loyalty/internal/infrastructure/client"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
@@ -19,7 +22,7 @@ const appVersion = "1.0.0"
 
 var errNoLogger = errors.New("no logger provided (use 'withLogger' option)")
 
-type runAddr struct {
+type addr struct {
 	host string
 	port int
 }
@@ -32,7 +35,8 @@ type apiHandler struct {
 }
 
 type application struct {
-	runAddr     runAddr
+	runAddr     addr
+	accrualAddr addr
 	log         logger.Logger
 	apiHandlers []apiHandler
 }
@@ -51,11 +55,6 @@ func (a application) run(ctx context.Context) error {
 		return errNoLogger
 	}
 
-	a.log.
-		WithField("host", a.runAddr.host).
-		WithField("port", a.runAddr.port).
-		Info("Starting server")
-
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", a.runAddr.host, a.runAddr.port),
 		Handler: a.router(),
@@ -64,7 +63,43 @@ func (a application) run(ctx context.Context) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
+		a.log.
+			WithField("host", a.runAddr.host).
+			WithField("port", a.runAddr.port).
+			Info("Starting server")
+
 		return server.ListenAndServe()
+	})
+
+	g.Go(func() error {
+		a.log.Info("Accrual worker started")
+
+		restyClient := client.NewRestyClient(
+			client.WithTimeout(200*time.Millisecond),
+			client.WithRetryCount(2),
+			client.WithRetryWaitTime(100*time.Millisecond),
+		)
+
+		accrualClient := accrual.NewAccrualClient(restyClient, a.accrualAddr.host, a.accrualAddr.port)
+
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-gCtx.Done():
+				a.log.Info("Stopped accrual client")
+				return nil
+			case <-ticker.C:
+				resp, err := accrualClient.OrderStatus("12345678705")
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+
+				fmt.Println(resp)
+			}
+		}
 	})
 
 	g.Go(func() error {

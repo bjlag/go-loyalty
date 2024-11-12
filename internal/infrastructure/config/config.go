@@ -9,44 +9,53 @@ import (
 )
 
 const (
-	defaultRunAddrHost  = "localhost"
-	defaultRunAddrPort  = 8080
-	defaultLogLevel     = "INFO"
-	defaultJWTSecretKey = "secret"
-	defaultJWTExpTime   = 3 * time.Hour
-	defaultDatabaseURI  = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
-	defaultMigratePath  = "./migrations"
+	defaultLogLevel          = "INFO"
+	defaultRunAddrHost       = "localhost"
+	defaultRunAddrPort       = 8080
+	defaultJWTSecretKey      = "secret"
+	defaultJWTExpTime        = 3 * time.Hour
+	defaultDatabaseURI       = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
+	defaultMigratePath       = "./migrations"
+	defaultAccrualSystemHost = "localhost"
+	defaultAccrualSystemPort = 8080
 
-	envRunAddress   = "RUN_ADDRESS"
-	envLogLevel     = "LOG_LEVEL"
-	envJWTSecretKey = "JWT_SECRET_KEY"
-	envJWTExpTime   = "JWT_EXP_TIME"
-	envDatabaseURI  = "DATABASE_URI"
-	envMigratePath  = "MIGRATE_SOURCE_PATH"
+	envRunAddress           = "RUN_ADDRESS"
+	envLogLevel             = "LOG_LEVEL"
+	envJWTSecretKey         = "JWT_SECRET_KEY"
+	envJWTExpTime           = "JWT_EXP_TIME"
+	envDatabaseURI          = "DATABASE_URI"
+	envMigratePath          = "MIGRATE_SOURCE_PATH"
+	envAccrualSystemAddress = "ACCRUAL_SYSTEM_ADDRESS"
 )
 
 var (
 	logLevel     string
-	addr         *runAddr
+	runAddr      *addr
 	jwtSecretKey string
 	jwtExpTime   time.Duration
 	databaseURI  string
 	migratePath  string
+	accrualAddr  *addr
 )
 
 type Configuration struct {
-	runAddr      runAddr
+	runAddr      addr
 	logLevel     string
 	jwtSecretKey string
 	jwtExpTime   time.Duration
 	databaseURI  string
 	migratePath  string
+	accrualAddr  addr
 }
 
 func Parse() *Configuration {
-	addr = &runAddr{
+	runAddr = &addr{
 		host: defaultRunAddrHost,
 		port: defaultRunAddrPort,
+	}
+	accrualAddr = &addr{
+		host: defaultAccrualSystemHost,
+		port: defaultAccrualSystemPort,
 	}
 	jwtExpTime = defaultJWTExpTime
 
@@ -54,12 +63,13 @@ func Parse() *Configuration {
 	parseEnvs()
 
 	return &Configuration{
-		runAddr:      *addr,
+		runAddr:      *runAddr,
 		logLevel:     logLevel,
 		jwtSecretKey: jwtSecretKey,
 		jwtExpTime:   jwtExpTime,
 		databaseURI:  databaseURI,
 		migratePath:  migratePath,
+		accrualAddr:  *accrualAddr,
 	}
 }
 
@@ -91,6 +101,14 @@ func (c Configuration) MigratePath() string {
 	return c.migratePath
 }
 
+func (c Configuration) AccrualSystemHost() string {
+	return c.accrualAddr.host
+}
+
+func (c Configuration) AccrualSystemPort() int {
+	return c.accrualAddr.port
+}
+
 func parseFlags() {
 	var err error
 
@@ -110,7 +128,18 @@ func parseFlags() {
 		"a",
 		fmt.Sprintf("Server address: host:port (default \"%s:%d\")", defaultRunAddrHost, defaultRunAddrPort),
 		func(s string) error {
-			if addr, err = newRunAddr(s); err != nil {
+			if runAddr, err = newAddr(s); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
+	flag.Func(
+		"r",
+		fmt.Sprintf("Accrual systm address: host:port (default \"%s:%d\")", defaultAccrualSystemHost, defaultAccrualSystemPort),
+		func(s string) error {
+			if accrualAddr, err = newAddr(s); err != nil {
 				return err
 			}
 
@@ -148,8 +177,15 @@ func parseEnvs() {
 	}
 
 	if value := os.Getenv(envRunAddress); value != "" {
-		if addr, err = newRunAddr(value); err != nil {
+		if runAddr, err = newAddr(value); err != nil {
 			logEnvError(envRunAddress, value, err)
+			os.Exit(2)
+		}
+	}
+
+	if value := os.Getenv(envAccrualSystemAddress); value != "" {
+		if accrualAddr, err = newAddr(value); err != nil {
+			logEnvError(envAccrualSystemAddress, value, err)
 			os.Exit(2)
 		}
 	}
