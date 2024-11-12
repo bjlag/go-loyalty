@@ -50,9 +50,11 @@ func main() {
 	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
 	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
 
+	worker := newAccrualWorker(cfg.AccrualSystemHost(), cfg.AccrualSystemPort(), log)
+	worker.run(ctx)
+
 	app := newApp(
 		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),
-		withAccrualAddr(cfg.AccrualSystemHost(), cfg.AccrualSystemPort()),
 		withLogger(log),
 
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
