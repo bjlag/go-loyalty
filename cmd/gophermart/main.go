@@ -31,6 +31,7 @@ func main() {
 
 	log.Infof("Log level %q", cfg.LogLevel())
 	log.Infof("Run address \"%s:%d\"", cfg.RunAddrHost(), cfg.RunAddrPort())
+	log.Infof("Accrual address \"%s:%d\"", cfg.AccrualSystemHost(), cfg.AccrualSystemPort())
 	log.Infof("JWT secret key %q", cfg.JWTSecretKey())
 	log.Infof("JWT expiration time %q", cfg.JWTExpTime())
 	log.Infof("Database URI %q", cfg.DatabaseURI())
@@ -51,6 +52,7 @@ func main() {
 
 	app := newApp(
 		withRunAddr(cfg.RunAddrHost(), cfg.RunAddrPort()),
+		withAccrualAddr(cfg.AccrualSystemHost(), cfg.AccrualSystemPort()),
 		withLogger(log),
 
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),

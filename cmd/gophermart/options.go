@@ -9,7 +9,16 @@ type option func(a *application)
 
 func withRunAddr(host string, port int) option {
 	return func(a *application) {
-		a.runAddr = runAddr{
+		a.runAddr = addr{
+			host: host,
+			port: port,
+		}
+	}
+}
+
+func withAccrualAddr(host string, port int) option {
+	return func(a *application) {
+		a.accrualAddr = addr{
 			host: host,
 			port: port,
 		}

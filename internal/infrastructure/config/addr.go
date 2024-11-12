@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type runAddr struct {
+type addr struct {
 	host string
 	port int
 }
 
-func newRunAddr(s string) (*runAddr, error) {
+func newAddr(s string) (*addr, error) {
 	values := strings.Split(s, ":")
 	if len(values) != 2 {
 		return nil, errors.New("invalid format")
@@ -23,16 +23,16 @@ func newRunAddr(s string) (*runAddr, error) {
 		return nil, fmt.Errorf("invalid port: %w", err)
 	}
 
-	return &runAddr{
+	return &addr{
 		host: values[0],
 		port: port,
 	}, nil
 }
 
-func (a runAddr) Host() string {
+func (a addr) Host() string {
 	return a.host
 }
 
-func (a runAddr) Port() int {
+func (a addr) Port() int {
 	return a.port
 }
