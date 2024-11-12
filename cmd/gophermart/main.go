@@ -7,18 +7,27 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/list"
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/upload"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/client"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
 	ucCreateAccrual "github.com/bjlag/go-loyalty/internal/usecase/accrual/create"
 	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/user/login"
 	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
+)
+
+const (
+	accrualTimeout       = 200 * time.Millisecond
+	accrualRetryCount    = 2
+	accrualRetryWaitTime = 100 * time.Millisecond
 )
 
 func main() {
@@ -50,7 +59,17 @@ func main() {
 	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
 	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
 
-	worker := newAccrualWorker(cfg.AccrualSystemHost(), cfg.AccrualSystemPort(), log)
+	accrualClient := accrual.NewAccrualClient(
+		client.NewRestyClient(
+			client.WithTimeout(accrualTimeout),
+			client.WithRetryCount(accrualRetryCount),
+			client.WithRetryWaitTime(accrualRetryWaitTime),
+		),
+		cfg.AccrualSystemHost(),
+		cfg.AccrualSystemPort(),
+	)
+
+	worker := newAccrualWorker(accrualClient, log)
 	worker.run(ctx)
 
 	app := newApp(
