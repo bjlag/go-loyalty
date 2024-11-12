@@ -8,7 +8,7 @@ import (
 type Response struct {
 	Order   string `json:"order"`
 	Status  string `json:"status"`
-	Accrual *int64 `json:"accrual,omitempty"`
+	Accrual *uint  `json:"accrual,omitempty"`
 }
 
 func (c Client) OrderStatus(orderNumber string) (*Response, error) {

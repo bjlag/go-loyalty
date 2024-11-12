@@ -20,6 +20,7 @@ import (
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
 	ucCreateAccrual "github.com/bjlag/go-loyalty/internal/usecase/accrual/create"
+	ucUpdateAccrual "github.com/bjlag/go-loyalty/internal/usecase/accrual/update"
 	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/user/login"
 	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
 )
@@ -55,10 +56,6 @@ func main() {
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
 
-	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
-	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
-	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
-
 	accrualClient := accrual.NewAccrualClient(
 		client.NewRestyClient(
 			client.WithTimeout(accrualTimeout),
@@ -69,7 +66,12 @@ func main() {
 		cfg.AccrualSystemPort(),
 	)
 
-	worker := newAccrualWorker(accrualClient, log)
+	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
+	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
+	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
+	usecaseUpdateAccrual := ucUpdateAccrual.NewUsecase(accrualClient, accrualRepo)
+
+	worker := newAccrualWorker(usecaseUpdateAccrual, log)
 	worker.run(ctx)
 
 	app := newApp(

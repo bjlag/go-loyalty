@@ -2,22 +2,21 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
-	"github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
+	"github.com/bjlag/go-loyalty/internal/usecase/accrual/update"
 )
 
 type accrualWorker struct {
-	client *accrual.Client
-	log    logger.Logger
+	usecase *update.Usecase
+	log     logger.Logger
 }
 
-func newAccrualWorker(client *accrual.Client, log logger.Logger) *accrualWorker {
+func newAccrualWorker(usecase *update.Usecase, log logger.Logger) *accrualWorker {
 	return &accrualWorker{
-		client: client,
-		log:    log,
+		usecase: usecase,
+		log:     log,
 	}
 }
 
@@ -34,13 +33,11 @@ func (w *accrualWorker) run(ctx context.Context) {
 				w.log.Info("Stopped accrual worker")
 				return
 			case <-ticker.C:
-				resp, err := w.client.OrderStatus("12345678705")
+				err := w.usecase.Update(ctx)
 				if err != nil {
-					fmt.Println(err)
+					w.log.WithError(err).Error("Failed to update accrual")
 					continue
 				}
-
-				fmt.Println(resp)
 			}
 		}
 	}()
