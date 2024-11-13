@@ -17,7 +17,7 @@ const (
 	defaultDatabaseURI       = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
 	defaultMigratePath       = "./migrations"
 	defaultAccrualSystemHost = "localhost"
-	defaultAccrualSystemPort = 8080
+	defaultAccrualSystemPort = 9090
 
 	envRunAddress           = "RUN_ADDRESS"
 	envLogLevel             = "LOG_LEVEL"

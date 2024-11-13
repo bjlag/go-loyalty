@@ -7,8 +7,8 @@ type Logger interface {
 	WithError(err error) Logger
 	Error(msg string)
 	Errorf(template string, args ...interface{})
-	Warning(msg string)
-	Warningf(template string, args ...interface{})
+	Warn(msg string)
+	Warnf(template string, args ...interface{})
 	Info(msg string)
 	Infof(template string, args ...interface{})
 	Debug(msg string)

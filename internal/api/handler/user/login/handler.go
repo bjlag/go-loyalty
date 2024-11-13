@@ -28,7 +28,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		if errors.Is(err, errInvalidLogin) || errors.Is(err, errInvalidPassword) {
-			h.log.WithError(err).Warning("Invalid request")
+			h.log.WithError(err).Warn("Invalid request")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}

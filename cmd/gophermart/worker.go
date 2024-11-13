@@ -21,6 +21,8 @@ func newAccrualWorker(usecase *update.Usecase, log logger.Logger) *accrualWorker
 }
 
 func (w *accrualWorker) run(ctx context.Context) {
+	resultCh := make(chan *update.Result)
+
 	go func() {
 		w.log.Info("Accrual worker started")
 
@@ -33,11 +35,19 @@ func (w *accrualWorker) run(ctx context.Context) {
 				w.log.Info("Stopped accrual worker")
 				return
 			case <-ticker.C:
-				err := w.usecase.Update(ctx)
+				err := w.usecase.Update(ctx, resultCh)
 				if err != nil {
 					w.log.WithError(err).Error("Failed to update accrual")
 					continue
 				}
+			}
+		}
+	}()
+
+	go func() {
+		for result := range resultCh {
+			if result != nil && result.Err != nil {
+				w.log.WithError(result.Err).Error("Failed to update accrual")
 			}
 		}
 	}()

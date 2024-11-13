@@ -2,8 +2,11 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
 	serviceAccrual "github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
@@ -24,6 +27,16 @@ type Usecase struct {
 	repo   repository.AccrualRepository
 }
 
+type Result struct {
+	Err error
+}
+
+func NewResult(err error) *Result {
+	return &Result{
+		Err: err,
+	}
+}
+
 func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepository) *Usecase {
 	return &Usecase{
 		client: client,
@@ -31,38 +44,56 @@ func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepository
 	}
 }
 
-func (u Usecase) Update(ctx context.Context) error {
+func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 	accrualsInWork, err := u.repo.AccrualsInWork(ctx)
 	if err != nil {
 		return err
 	}
 
+	g, gCtx := errgroup.WithContext(ctx)
+
 	for _, accrual := range accrualsInWork {
-		resp, err := u.client.OrderStatus(accrual.OrderNumber)
-		if err != nil {
-			continue
-		}
+		g.Go(func() error {
+			select {
+			case <-gCtx.Done():
+				close(resultCh)
+				return gCtx.Err()
+			default:
+			}
 
-		newStatus, ok := mapAccrualStatus[strings.ToLower(resp.Status)]
-		if !ok {
-			continue
-		}
+			resp, err := u.client.OrderStatus(accrual.OrderNumber)
+			if err != nil {
+				resultCh <- NewResult(err)
+				return nil
+			}
 
-		if newStatus == accrual.Status {
-			continue
-		}
+			newStatus, ok := mapAccrualStatus[strings.ToLower(resp.Status)]
+			if !ok {
+				resultCh <- NewResult(fmt.Errorf("unknown status: %s", resp.Status))
+				return nil
+			}
 
-		var newAccrual uint
-		if resp.Accrual != nil {
-			newAccrual = *resp.Accrual
-		}
+			if newStatus == accrual.Status {
+				return nil
+			}
 
-		err = u.repo.Update(ctx, accrual.OrderNumber, newStatus, newAccrual)
-		if err != nil {
-			return err
-		}
+			var newAccrual uint
+			if resp.Accrual != nil {
+				newAccrual = *resp.Accrual
+			}
 
-		fmt.Println(resp)
+			err = u.repo.Update(gCtx, accrual.OrderNumber, newStatus, newAccrual)
+			if err != nil {
+				resultCh <- NewResult(err)
+				return nil
+			}
+
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil && !errors.Is(err, context.Canceled) {
+		return err
 	}
 
 	return nil

@@ -61,6 +61,7 @@ func main() {
 			client.WithTimeout(accrualTimeout),
 			client.WithRetryCount(accrualRetryCount),
 			client.WithRetryWaitTime(accrualRetryWaitTime),
+			client.WithLogger(log),
 		),
 		cfg.AccrualSystemHost(),
 		cfg.AccrualSystemPort(),

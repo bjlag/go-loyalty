@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"net/http"
 	"time"
 
@@ -28,6 +29,12 @@ func WithRetryCount(count int) Option {
 func WithRetryWaitTime(waitTime time.Duration) Option {
 	return func(client *resty.Client) {
 		client.SetRetryWaitTime(waitTime)
+	}
+}
+
+func WithLogger(logger logger.Logger) Option {
+	return func(client *resty.Client) {
+		client.SetLogger(logger)
 	}
 }
 
