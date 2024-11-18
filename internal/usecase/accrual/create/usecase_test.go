@@ -26,7 +26,7 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 	}
 
 	type fields struct {
-		repo func(ctrl *gomock.Controller) *mockRep.MockAccrualRepository
+		repo func(ctrl *gomock.Controller) *mockRep.MockAccrualRepo
 	}
 
 	type args struct {
@@ -42,12 +42,12 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepository {
-					repoMock := mockRep.NewMockAccrualRepository(ctrl)
+				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepo {
+					repoMock := mockRep.NewMockAccrualRepo(ctrl)
 
 					gomock.InOrder(
 						repoMock.EXPECT().AccrualByOrderNumber(gomock.Any(), "12345678903").Return(nil, nil),
-						repoMock.EXPECT().Insert(gomock.Any(), accrual).Return(nil),
+						repoMock.EXPECT().Create(gomock.Any(), accrual).Return(nil),
 					)
 
 					return repoMock
@@ -61,7 +61,7 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 		{
 			name: "wrong_order_number",
 			fields: fields{
-				repo: mockRep.NewMockAccrualRepository,
+				repo: mockRep.NewMockAccrualRepo,
 			},
 			args: args{
 				accrual: &model.Accrual{OrderNumber: "123"},
@@ -73,8 +73,8 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 		{
 			name: "another_user_has_already_registered_order",
 			fields: fields{
-				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepository {
-					repoMock := mockRep.NewMockAccrualRepository(ctrl)
+				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepo {
+					repoMock := mockRep.NewMockAccrualRepo(ctrl)
 
 					existAccrual := &model.Accrual{
 						UserGUID: "other_user",
@@ -82,7 +82,7 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 
 					gomock.InOrder(
 						repoMock.EXPECT().AccrualByOrderNumber(gomock.Any(), "12345678903").Return(existAccrual, nil),
-						repoMock.EXPECT().Insert(gomock.Any(), gomock.Any()).Times(0),
+						repoMock.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0),
 					)
 
 					return repoMock
@@ -98,8 +98,8 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 		{
 			name: "user_already_sent_this_order",
 			fields: fields{
-				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepository {
-					repoMock := mockRep.NewMockAccrualRepository(ctrl)
+				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepo {
+					repoMock := mockRep.NewMockAccrualRepo(ctrl)
 
 					existAccrual := &model.Accrual{
 						UserGUID: "user-123",
@@ -107,7 +107,7 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 
 					gomock.InOrder(
 						repoMock.EXPECT().AccrualByOrderNumber(gomock.Any(), "12345678903").Return(existAccrual, nil),
-						repoMock.EXPECT().Insert(gomock.Any(), gomock.Any()).Times(0),
+						repoMock.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0),
 					)
 
 					return repoMock
@@ -123,12 +123,12 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 		{
 			name: "error_get_accrual",
 			fields: fields{
-				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepository {
-					repoMock := mockRep.NewMockAccrualRepository(ctrl)
+				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepo {
+					repoMock := mockRep.NewMockAccrualRepo(ctrl)
 
 					gomock.InOrder(
 						repoMock.EXPECT().AccrualByOrderNumber(gomock.Any(), "12345678903").Return(nil, errSomeError),
-						repoMock.EXPECT().Insert(gomock.Any(), gomock.Any()).Times(0),
+						repoMock.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0),
 					)
 
 					return repoMock

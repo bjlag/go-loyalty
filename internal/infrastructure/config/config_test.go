@@ -37,7 +37,7 @@ func TestParse_Default(t *testing.T) {
 	assert.Equal(t, "postgres://postgres:secret@localhost:5432/master?sslmode=disable", got.DatabaseURI())
 	assert.Equal(t, "./migrations", got.MigratePath())
 	assert.Equal(t, "localhost", got.AccrualSystemHost())
-	assert.Equal(t, 8080, got.AccrualSystemPort())
+	assert.Equal(t, 9090, got.AccrualSystemPort())
 }
 
 func TestParse_Flags(t *testing.T) {
