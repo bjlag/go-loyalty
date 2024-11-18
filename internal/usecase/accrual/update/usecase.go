@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
 	serviceAccrual "github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
 	"github.com/bjlag/go-loyalty/internal/model"
@@ -23,8 +25,9 @@ var (
 )
 
 type Usecase struct {
-	client *serviceAccrual.Client
-	repo   repository.AccrualRepo
+	client  *serviceAccrual.Client
+	repo    repository.AccrualRepo
+	guidGen guid.IGenerator
 }
 
 type Result struct {
@@ -37,10 +40,11 @@ func NewResult(err error) *Result {
 	}
 }
 
-func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepo) *Usecase {
+func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepo, guidGen guid.IGenerator) *Usecase {
 	return &Usecase{
-		client: client,
-		repo:   repo,
+		client:  client,
+		repo:    repo,
+		guidGen: guidGen,
 	}
 }
 
@@ -85,13 +89,29 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 			}
 
 			if newAccrual > 0 {
-				err = u.repo.AddTx(gCtx, model.Accrual{
+				mAccrual := model.Accrual{
 					OrderNumber: accrual.OrderNumber,
 					UserGUID:    accrual.UserGUID,
 					Status:      newStatus,
 					Accrual:     newAccrual,
 					UploadedAt:  accrual.UploadedAt,
-				})
+				}
+
+				mAccount := model.Account{
+					GUID:      accrual.UserGUID,
+					Balance:   newAccrual,
+					UpdatedAt: time.Now(),
+				}
+
+				mTransaction := model.Transaction{
+					GUID:        u.guidGen.Generate(),
+					AccountGUID: mAccount.GUID,
+					OrderNumber: accrual.OrderNumber,
+					Sum:         newAccrual,
+					ProcessedAt: time.Now(),
+				}
+
+				err = u.repo.Add(gCtx, mAccrual, mAccount, mTransaction)
 			} else {
 				err = u.repo.UpdateStatus(gCtx, accrual.OrderNumber, newStatus)
 			}

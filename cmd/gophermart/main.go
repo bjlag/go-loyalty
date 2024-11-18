@@ -67,10 +67,12 @@ func main() {
 		cfg.AccrualSystemPort(),
 	)
 
-	usecaseRegister := ucRegister.NewUsecase(userRepo, new(guid.Generator), hasher, jwtBuilder)
+	guidGen := new(guid.Generator)
+
+	usecaseRegister := ucRegister.NewUsecase(userRepo, guidGen, hasher, jwtBuilder)
 	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
 	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
-	usecaseUpdateAccrual := ucUpdateAccrual.NewUsecase(accrualClient, accrualRepo)
+	usecaseUpdateAccrual := ucUpdateAccrual.NewUsecase(accrualClient, accrualRepo, guidGen)
 
 	worker := newAccrualWorker(usecaseUpdateAccrual, log)
 	worker.run(ctx)
