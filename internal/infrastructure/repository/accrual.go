@@ -7,18 +7,21 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
+	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
 	"github.com/bjlag/go-loyalty/internal/model"
 )
 
-type AccrualRepository interface {
+type AccrualRepo interface {
 	AccrualByOrderNumber(ctx context.Context, orderNumber string) (*model.Accrual, error)
 	AccrualsByUser(ctx context.Context, userGUID string) ([]model.Accrual, error)
 	AccrualsInWork(ctx context.Context) ([]model.Accrual, error)
-	Insert(ctx context.Context, accrual *model.Accrual) error
-	Update(ctx context.Context, orderNumber string, newStatus model.AccrualStatus, newAccrual uint) error
+	Create(ctx context.Context, accrual *model.Accrual) error
+	UpdateStatus(ctx context.Context, orderNumber string, newStatus model.AccrualStatus) error
+	AddTx(ctx context.Context, accrual model.Accrual) error
 }
 
 type AccrualPG struct {
@@ -145,7 +148,7 @@ func (r AccrualPG) AccrualsInWork(ctx context.Context) ([]model.Accrual, error) 
 	return result, nil
 }
 
-func (r AccrualPG) Insert(ctx context.Context, accrual *model.Accrual) error {
+func (r AccrualPG) Create(ctx context.Context, accrual *model.Accrual) error {
 	query := `INSERT INTO accruals (order_number, user_guid, status, accrual, uploaded_at) VALUES ($1, $2, $3, $4, $5)`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -163,8 +166,8 @@ func (r AccrualPG) Insert(ctx context.Context, accrual *model.Accrual) error {
 	return nil
 }
 
-func (r AccrualPG) Update(ctx context.Context, orderNumber string, newStatus model.AccrualStatus, newAccrual uint) error {
-	query := `UPDATE accruals SET status = $1, accrual = $2 WHERE order_number = $3`
+func (r AccrualPG) UpdateStatus(ctx context.Context, orderNumber string, newStatus model.AccrualStatus) error {
+	query := `UPDATE accruals SET status = $1 WHERE order_number = $2`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to prepare query: %w", err)
@@ -173,9 +176,81 @@ func (r AccrualPG) Update(ctx context.Context, orderNumber string, newStatus mod
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.ExecContext(ctx, newStatus, newAccrual, orderNumber)
+	_, err = stmt.ExecContext(ctx, newStatus, orderNumber)
 	if err != nil {
 		return fmt.Errorf("failed to update accrual: %w", err)
+	}
+
+	return nil
+}
+
+func (r AccrualPG) AddTx(ctx context.Context, accrual model.Accrual) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	// обновляем статус начисления
+
+	query := `UPDATE accruals SET status = $1, accrual = $2 WHERE order_number = $3`
+	stmtAccrual, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare update accrual query: %w", err)
+	}
+	defer func() {
+		_ = stmtAccrual.Close()
+	}()
+
+	_, err = stmtAccrual.ExecContext(ctx, accrual.Status, accrual.Accrual, accrual.OrderNumber)
+	if err != nil {
+		return fmt.Errorf("failed to update accrual: %w", err)
+	}
+
+	// обновляем счет
+	query = `
+		INSERT INTO accounts (guid, balance, updated_at)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (guid) DO UPDATE
+    		SET balance    = accounts.balance + excluded.balance,
+        		updated_at = excluded.updated_at;
+	`
+	stmtAccount, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare insert account query: %w", err)
+	}
+	defer func() {
+		_ = stmtAccount.Close()
+	}()
+
+	_, err = stmtAccount.ExecContext(ctx, accrual.UserGUID, accrual.Accrual, time.Now())
+	if err != nil {
+		return fmt.Errorf("failed to update accrual: %w", err)
+	}
+
+	// записываем транзакцию
+	query = `
+		INSERT INTO transactions (guid, account_guid, order_number, sum, processed_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+	stmtTx, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare insert transaction query: %w", err)
+	}
+	defer func() {
+		_ = stmtTx.Close()
+	}()
+
+	_, err = stmtTx.ExecContext(ctx, new(guid.Generator).Generate(), accrual.UserGUID, accrual.OrderNumber, accrual.Accrual, time.Now())
+	if err != nil {
+		return fmt.Errorf("failed to update accrual: %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil

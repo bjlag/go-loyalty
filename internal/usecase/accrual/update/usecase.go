@@ -24,7 +24,7 @@ var (
 
 type Usecase struct {
 	client *serviceAccrual.Client
-	repo   repository.AccrualRepository
+	repo   repository.AccrualRepo
 }
 
 type Result struct {
@@ -37,7 +37,7 @@ func NewResult(err error) *Result {
 	}
 }
 
-func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepository) *Usecase {
+func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepo) *Usecase {
 	return &Usecase{
 		client: client,
 		repo:   repo,
@@ -45,6 +45,8 @@ func NewUsecase(client *serviceAccrual.Client, repo repository.AccrualRepository
 }
 
 func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
+	var err error
+
 	accrualsInWork, err := u.repo.AccrualsInWork(ctx)
 	if err != nil {
 		return err
@@ -82,7 +84,18 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 				newAccrual = *resp.Accrual
 			}
 
-			err = u.repo.Update(gCtx, accrual.OrderNumber, newStatus, newAccrual)
+			if newAccrual > 0 {
+				err = u.repo.AddTx(gCtx, model.Accrual{
+					OrderNumber: accrual.OrderNumber,
+					UserGUID:    accrual.UserGUID,
+					Status:      newStatus,
+					Accrual:     newAccrual,
+					UploadedAt:  accrual.UploadedAt,
+				})
+			} else {
+				err = u.repo.UpdateStatus(gCtx, accrual.OrderNumber, newStatus)
+			}
+
 			if err != nil {
 				resultCh <- NewResult(err)
 				return nil

@@ -16,10 +16,10 @@ var (
 )
 
 type Usecase struct {
-	repo repository.AccrualRepository
+	repo repository.AccrualRepo
 }
 
-func NewUsecase(repo repository.AccrualRepository) *Usecase {
+func NewUsecase(repo repository.AccrualRepo) *Usecase {
 	return &Usecase{
 		repo: repo,
 	}
@@ -42,7 +42,7 @@ func (u *Usecase) CreateAccrual(ctx context.Context, accrual *model.Accrual) err
 		return ErrOrderAlreadyExists
 	}
 
-	err := u.repo.Insert(ctx, accrual)
+	err := u.repo.Create(ctx, accrual)
 	if err != nil {
 		return err
 	}

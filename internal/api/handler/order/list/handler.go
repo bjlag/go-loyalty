@@ -11,11 +11,11 @@ import (
 )
 
 type Handler struct {
-	repo repository.AccrualRepository
+	repo repository.AccrualRepo
 	log  logger.Logger
 }
 
-func NewHandler(repo repository.AccrualRepository, log logger.Logger) *Handler {
+func NewHandler(repo repository.AccrualRepo, log logger.Logger) *Handler {
 	return &Handler{
 		repo: repo,
 		log:  log,

@@ -12,31 +12,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockAccrualRepository is a mock of AccrualRepository interface.
-type MockAccrualRepository struct {
+// MockAccrualRepo is a mock of AccrualRepo interface.
+type MockAccrualRepo struct {
 	ctrl     *gomock.Controller
-	recorder *MockAccrualRepositoryMockRecorder
+	recorder *MockAccrualRepoMockRecorder
 }
 
-// MockAccrualRepositoryMockRecorder is the mock recorder for MockAccrualRepository.
-type MockAccrualRepositoryMockRecorder struct {
-	mock *MockAccrualRepository
+// MockAccrualRepoMockRecorder is the mock recorder for MockAccrualRepo.
+type MockAccrualRepoMockRecorder struct {
+	mock *MockAccrualRepo
 }
 
-// NewMockAccrualRepository creates a new mock instance.
-func NewMockAccrualRepository(ctrl *gomock.Controller) *MockAccrualRepository {
-	mock := &MockAccrualRepository{ctrl: ctrl}
-	mock.recorder = &MockAccrualRepositoryMockRecorder{mock}
+// NewMockAccrualRepo creates a new mock instance.
+func NewMockAccrualRepo(ctrl *gomock.Controller) *MockAccrualRepo {
+	mock := &MockAccrualRepo{ctrl: ctrl}
+	mock.recorder = &MockAccrualRepoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccrualRepository) EXPECT() *MockAccrualRepositoryMockRecorder {
+func (m *MockAccrualRepo) EXPECT() *MockAccrualRepoMockRecorder {
 	return m.recorder
 }
 
 // AccrualByOrderNumber mocks base method.
-func (m *MockAccrualRepository) AccrualByOrderNumber(ctx context.Context, orderNumber string) (*model.Accrual, error) {
+func (m *MockAccrualRepo) AccrualByOrderNumber(ctx context.Context, orderNumber string) (*model.Accrual, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AccrualByOrderNumber", ctx, orderNumber)
 	ret0, _ := ret[0].(*model.Accrual)
@@ -45,13 +45,13 @@ func (m *MockAccrualRepository) AccrualByOrderNumber(ctx context.Context, orderN
 }
 
 // AccrualByOrderNumber indicates an expected call of AccrualByOrderNumber.
-func (mr *MockAccrualRepositoryMockRecorder) AccrualByOrderNumber(ctx, orderNumber interface{}) *gomock.Call {
+func (mr *MockAccrualRepoMockRecorder) AccrualByOrderNumber(ctx, orderNumber interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualByOrderNumber", reflect.TypeOf((*MockAccrualRepository)(nil).AccrualByOrderNumber), ctx, orderNumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualByOrderNumber", reflect.TypeOf((*MockAccrualRepo)(nil).AccrualByOrderNumber), ctx, orderNumber)
 }
 
 // AccrualsByUser mocks base method.
-func (m *MockAccrualRepository) AccrualsByUser(ctx context.Context, userGUID string) ([]model.Accrual, error) {
+func (m *MockAccrualRepo) AccrualsByUser(ctx context.Context, userGUID string) ([]model.Accrual, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AccrualsByUser", ctx, userGUID)
 	ret0, _ := ret[0].([]model.Accrual)
@@ -60,21 +60,64 @@ func (m *MockAccrualRepository) AccrualsByUser(ctx context.Context, userGUID str
 }
 
 // AccrualsByUser indicates an expected call of AccrualsByUser.
-func (mr *MockAccrualRepositoryMockRecorder) AccrualsByUser(ctx, userGUID interface{}) *gomock.Call {
+func (mr *MockAccrualRepoMockRecorder) AccrualsByUser(ctx, userGUID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualsByUser", reflect.TypeOf((*MockAccrualRepository)(nil).AccrualsByUser), ctx, userGUID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualsByUser", reflect.TypeOf((*MockAccrualRepo)(nil).AccrualsByUser), ctx, userGUID)
 }
 
-// Insert mocks base method.
-func (m *MockAccrualRepository) Insert(ctx context.Context, accrual *model.Accrual) error {
+// AccrualsInWork mocks base method.
+func (m *MockAccrualRepo) AccrualsInWork(ctx context.Context) ([]model.Accrual, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", ctx, accrual)
+	ret := m.ctrl.Call(m, "AccrualsInWork", ctx)
+	ret0, _ := ret[0].([]model.Accrual)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AccrualsInWork indicates an expected call of AccrualsInWork.
+func (mr *MockAccrualRepoMockRecorder) AccrualsInWork(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualsInWork", reflect.TypeOf((*MockAccrualRepo)(nil).AccrualsInWork), ctx)
+}
+
+// AddTx mocks base method.
+func (m *MockAccrualRepo) AddTx(ctx context.Context, accrual model.Accrual) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddTx", ctx, accrual)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Insert indicates an expected call of Insert.
-func (mr *MockAccrualRepositoryMockRecorder) Insert(ctx, accrual interface{}) *gomock.Call {
+// AddTx indicates an expected call of AddTx.
+func (mr *MockAccrualRepoMockRecorder) AddTx(ctx, accrual interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockAccrualRepository)(nil).Insert), ctx, accrual)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTx", reflect.TypeOf((*MockAccrualRepo)(nil).AddTx), ctx, accrual)
+}
+
+// Create mocks base method.
+func (m *MockAccrualRepo) Create(ctx context.Context, accrual *model.Accrual) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, accrual)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockAccrualRepoMockRecorder) Create(ctx, accrual interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccrualRepo)(nil).Create), ctx, accrual)
+}
+
+// UpdateStatus mocks base method.
+func (m *MockAccrualRepo) UpdateStatus(ctx context.Context, orderNumber string, newStatus model.AccrualStatus) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, orderNumber, newStatus)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus.
+func (mr *MockAccrualRepoMockRecorder) UpdateStatus(ctx, orderNumber, newStatus interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockAccrualRepo)(nil).UpdateStatus), ctx, orderNumber, newStatus)
 }
