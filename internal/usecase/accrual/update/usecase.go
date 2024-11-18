@@ -31,12 +31,32 @@ type Usecase struct {
 }
 
 type Result struct {
-	Err error
+	OrderNumber string
+	UserGUID    string
+	OldStatus   model.AccrualStatus
+	OldAccrual  uint
+	NewStatus   *model.AccrualStatus
+	NewAccrual  *uint
+	Err         error
 }
 
-func NewResult(err error) *Result {
+func NewResult(
+	orderNumber string,
+	userGUID string,
+	oldStatus model.AccrualStatus,
+	oldAccrual uint,
+	newStatus *model.AccrualStatus,
+	newAccrual *uint,
+	err error,
+) *Result {
 	return &Result{
-		Err: err,
+		OrderNumber: orderNumber,
+		UserGUID:    userGUID,
+		OldStatus:   oldStatus,
+		OldAccrual:  oldAccrual,
+		NewStatus:   newStatus,
+		NewAccrual:  newAccrual,
+		Err:         err,
 	}
 }
 
@@ -69,13 +89,21 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 
 			resp, err := u.client.OrderStatus(accrual.OrderNumber)
 			if err != nil {
-				resultCh <- NewResult(err)
+				resultCh <- NewResult(accrual.OrderNumber, accrual.UserGUID, accrual.Status, accrual.Accrual, nil, nil, err)
 				return nil
 			}
 
 			newStatus, ok := mapAccrualStatus[strings.ToLower(resp.Status)]
 			if !ok {
-				resultCh <- NewResult(fmt.Errorf("unknown status: %s", resp.Status))
+				resultCh <- NewResult(
+					accrual.OrderNumber,
+					accrual.UserGUID,
+					accrual.Status,
+					accrual.Accrual,
+					nil,
+					nil,
+					fmt.Errorf("unknown status: %s", resp.Status),
+				)
 				return nil
 			}
 
@@ -117,9 +145,11 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 			}
 
 			if err != nil {
-				resultCh <- NewResult(err)
+				resultCh <- NewResult(accrual.OrderNumber, accrual.UserGUID, accrual.Status, accrual.Accrual, nil, nil, err)
 				return nil
 			}
+
+			resultCh <- NewResult(accrual.OrderNumber, accrual.UserGUID, accrual.Status, accrual.Accrual, &newStatus, &newAccrual, nil)
 
 			return nil
 		})

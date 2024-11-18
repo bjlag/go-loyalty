@@ -46,9 +46,24 @@ func (w *accrualWorker) run(ctx context.Context) {
 
 	go func() {
 		for result := range resultCh {
-			if result != nil && result.Err != nil {
-				w.log.WithError(result.Err).Error("Failed to update accrual")
+			if result == nil {
+				continue
 			}
+
+			log := w.log.
+				WithField("order", result.OrderNumber).
+				WithField("user", result.UserGUID).
+				WithField("old_status", result.OldStatus.String()).
+				WithField("old_accrual", result.OldAccrual).
+				WithField("new_status", result.NewStatus.String()).
+				WithField("new_accrual", result.NewAccrual)
+
+			if result.Err != nil {
+				log.WithError(result.Err).Error("Failed to update accrual")
+				continue
+			}
+
+			log.Info("Accrual updated")
 		}
 	}()
 }
