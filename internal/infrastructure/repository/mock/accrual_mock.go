@@ -81,17 +81,17 @@ func (mr *MockAccrualRepoMockRecorder) AccrualsInWork(ctx interface{}) *gomock.C
 }
 
 // Add mocks base method.
-func (m *MockAccrualRepo) Add(ctx context.Context, accrual model.Accrual) error {
+func (m *MockAccrualRepo) Add(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", ctx, accrual)
+	ret := m.ctrl.Call(m, "Add", ctx, accrual, account, transaction)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Add indicates an expected call of Add.
-func (mr *MockAccrualRepoMockRecorder) Add(ctx, accrual interface{}) *gomock.Call {
+func (mr *MockAccrualRepoMockRecorder) Add(ctx, accrual, account, transaction interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockAccrualRepo)(nil).Add), ctx, accrual)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockAccrualRepo)(nil).Add), ctx, accrual, account, transaction)
 }
 
 // Create mocks base method.

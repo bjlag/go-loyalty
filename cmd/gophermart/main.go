@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bjlag/go-loyalty/internal/api/handler/balance"
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/list"
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/upload"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
@@ -52,6 +53,7 @@ func main() {
 
 	userRepo := repository.NewUserPG(db)
 	accrualRepo := repository.NewAccrualPG(db)
+	accountRepo := repository.NewAccountPG(db)
 
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
@@ -85,6 +87,7 @@ func main() {
 		withAPIHandler(http.MethodPost, "/api/user/login", login.NewHandler(usecaseLogin, log).Handle),
 		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(usecaseCreateAccrual, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 		withAPIHandler(http.MethodGet, "/api/user/orders", list.NewHandler(accrualRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+		withAPIHandler(http.MethodGet, "/api/user/balance", balance.NewHandler(accountRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 	)
 
 	if err := app.run(ctx); err != nil {
