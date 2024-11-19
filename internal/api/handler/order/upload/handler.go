@@ -7,6 +7,7 @@ import (
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
+	"github.com/bjlag/go-loyalty/internal/infrastructure/validator"
 	"github.com/bjlag/go-loyalty/internal/model"
 	"github.com/bjlag/go-loyalty/internal/usecase/accrual/create"
 )
@@ -42,12 +43,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderNumber := b.String()
+	if !validator.CheckLuhn(orderNumber) {
+		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+		return
+	}
 
 	if err := h.usecase.CreateAccrual(ctx, model.NewAccrual(orderNumber, userGUID)); err != nil {
 		switch {
-		case errors.Is(err, create.ErrInvalidOrderNumber):
-			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
-			return
 		case errors.Is(err, create.ErrAnotherUserHasAlreadyRegisteredOrder):
 			http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
 			return

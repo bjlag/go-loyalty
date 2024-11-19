@@ -59,18 +59,6 @@ func TestUsecase_CreateAccrual(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
-			name: "wrong_order_number",
-			fields: fields{
-				repo: mockRep.NewMockAccrualRepo,
-			},
-			args: args{
-				accrual: &model.Accrual{OrderNumber: "123"},
-			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				return errors.Is(err, create.ErrInvalidOrderNumber)
-			},
-		},
-		{
 			name: "another_user_has_already_registered_order",
 			fields: fields{
 				repo: func(ctrl *gomock.Controller) *mockRep.MockAccrualRepo {
