@@ -1,4 +1,4 @@
-package balance
+package get
 
 import (
 	"encoding/json"
