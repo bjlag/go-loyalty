@@ -12,7 +12,7 @@ import (
 )
 
 type AccountRepo interface {
-	Balance(ctx context.Context, userGUID string) (float32, error)
+	Balance(ctx context.Context, accountGUID string) (float32, error)
 }
 
 type AccountPG struct {
@@ -25,7 +25,7 @@ func NewAccountPG(db *sqlx.DB) *AccrualPG {
 	}
 }
 
-func (r AccrualPG) Balance(ctx context.Context, userGUID string) (float32, error) {
+func (r AccrualPG) Balance(ctx context.Context, accountGUID string) (float32, error) {
 	query := `SELECT balance FROM accounts WHERE guid = $1`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -36,7 +36,7 @@ func (r AccrualPG) Balance(ctx context.Context, userGUID string) (float32, error
 	}()
 
 	var balance float32
-	row := stmt.QueryRowContext(ctx, userGUID)
+	row := stmt.QueryRowContext(ctx, accountGUID)
 	if row.Err() != nil {
 		return 0, fmt.Errorf("failed to query account: %w", row.Err())
 	}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bjlag/go-loyalty/internal/api/handler/balance/get"
+	"github.com/bjlag/go-loyalty/internal/api/handler/balance/withdraw"
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/list"
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/upload"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
@@ -24,6 +25,7 @@ import (
 	ucUpdateAccrual "github.com/bjlag/go-loyalty/internal/usecase/accrual/update"
 	ucLogin "github.com/bjlag/go-loyalty/internal/usecase/user/login"
 	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
+	ucCreateWithdraw "github.com/bjlag/go-loyalty/internal/usecase/withdraw/create"
 )
 
 const (
@@ -75,6 +77,7 @@ func main() {
 	usecaseLogin := ucLogin.NewUsecase(userRepo, hasher, jwtBuilder)
 	usecaseCreateAccrual := ucCreateAccrual.NewUsecase(accrualRepo)
 	usecaseUpdateAccrual := ucUpdateAccrual.NewUsecase(accrualClient, accrualRepo, guidGen)
+	usecaseCreateWithdraw := ucCreateWithdraw.NewUsecase(accrualRepo, accountRepo, guidGen)
 
 	worker := newAccrualWorker(usecaseUpdateAccrual, log)
 	worker.run(ctx)
@@ -85,9 +88,12 @@ func main() {
 
 		withAPIHandler(http.MethodPost, "/api/user/register", register.NewHandler(usecaseRegister, log).Handle),
 		withAPIHandler(http.MethodPost, "/api/user/login", login.NewHandler(usecaseLogin, log).Handle),
+
 		withAPIHandler(http.MethodPost, "/api/user/orders", upload.NewHandler(usecaseCreateAccrual, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 		withAPIHandler(http.MethodGet, "/api/user/orders", list.NewHandler(accrualRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+
 		withAPIHandler(http.MethodGet, "/api/user/balance", get.NewHandler(accountRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+		withAPIHandler(http.MethodPost, "/api/user/balance/withdraw", withdraw.NewHandler(usecaseCreateWithdraw, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 	)
 
 	if err := app.run(ctx); err != nil {

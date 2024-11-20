@@ -6,6 +6,6 @@ type Transaction struct {
 	GUID        string
 	AccountGUID string
 	OrderNumber string
-	Sum         uint
+	Sum         int
 	ProcessedAt time.Time
 }

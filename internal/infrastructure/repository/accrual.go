@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"time"
 
 	"github.com/bjlag/go-loyalty/internal/model"
 )
@@ -20,6 +21,7 @@ type AccrualRepo interface {
 	Create(ctx context.Context, accrual *model.Accrual) error
 	UpdateStatus(ctx context.Context, orderNumber string, newStatus model.AccrualStatus) error
 	Add(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error
+	Withdraw(ctx context.Context, transaction model.Transaction) error
 }
 
 type AccrualPG struct {
@@ -214,6 +216,35 @@ func (r AccrualPG) Add(ctx context.Context, accrual model.Accrual, account model
 	return nil
 }
 
+func (r AccrualPG) Withdraw(ctx context.Context, transaction model.Transaction) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	err = update2AccountTx(tx, transaction.AccountGUID, transaction.Sum, transaction.ProcessedAt)
+	if err != nil {
+		return err
+	}
+
+	// увеличить итоговую сумму всех выплат
+
+	err = addTransaction(tx, transaction)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
 func updateAccrualTx(tx *sql.Tx, model model.Accrual) error {
 	query := `UPDATE accruals SET status = $1, accrual = $2 WHERE order_number = $3`
 	stmt, err := tx.Prepare(query)
@@ -249,6 +280,30 @@ func updateAccountTx(tx *sql.Tx, model model.Account) error {
 	}()
 
 	_, err = stmt.Exec(model.GUID, model.Balance, model.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to update account: %w", err)
+	}
+
+	return nil
+}
+
+func update2AccountTx(tx *sql.Tx, guid string, sum int, updatedAt time.Time) error {
+	query := `
+		INSERT INTO accounts (guid, balance, updated_at)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (guid) DO UPDATE
+    		SET balance    = accounts.balance + excluded.balance,
+        		updated_at = excluded.updated_at;
+	`
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare insert account query: %w", err)
+	}
+	defer func() {
+		_ = stmt.Close()
+	}()
+
+	_, err = stmt.Exec(guid, sum, updatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to update account: %w", err)
 	}

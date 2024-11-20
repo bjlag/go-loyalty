@@ -135,7 +135,7 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 					GUID:        u.guidGen.Generate(),
 					AccountGUID: mAccount.GUID,
 					OrderNumber: accrual.OrderNumber,
-					Sum:         newAccrual,
+					Sum:         int(newAccrual),
 					ProcessedAt: time.Now(),
 				}
 
