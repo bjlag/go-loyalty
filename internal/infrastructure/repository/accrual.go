@@ -68,6 +68,7 @@ func (r AccrualPG) AccrualsByUser(ctx context.Context, orderNumber string) ([]mo
 		SELECT order_number, user_guid, status, accrual, uploaded_at 
 		FROM accruals 
 		WHERE user_guid = $1
+		ORDER BY uploaded_at DESC
 	`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {

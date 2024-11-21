@@ -45,3 +45,23 @@ func (a accrual) export() *model.Accrual {
 		UploadedAt:  a.UploadedAt,
 	}
 }
+
+type transaction struct {
+	GUID        string                `db:"guid"`
+	AccountGUID string                `db:"account_guid"`
+	OrderNumber string                `db:"order_number"`
+	Type        model.TransactionType `db:"type"`
+	Sum         uint                  `db:"sum"`
+	ProcessedAt time.Time             `db:"processed_at"`
+}
+
+func (t transaction) export() *model.Transaction {
+	return &model.Transaction{
+		GUID:        t.GUID,
+		AccountGUID: t.AccountGUID,
+		OrderNumber: t.OrderNumber,
+		Type:        t.Type,
+		Sum:         t.Sum,
+		ProcessedAt: t.ProcessedAt,
+	}
+}

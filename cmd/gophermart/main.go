@@ -15,6 +15,7 @@ import (
 	"github.com/bjlag/go-loyalty/internal/api/handler/order/upload"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
 	"github.com/bjlag/go-loyalty/internal/api/handler/user/register"
+	"github.com/bjlag/go-loyalty/internal/api/handler/withdrawals"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/client"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/guid"
@@ -56,6 +57,7 @@ func main() {
 	userRepo := repository.NewUserPG(db)
 	accrualRepo := repository.NewAccrualPG(db)
 	accountRepo := repository.NewAccountPG(db)
+	transactionRepo := repository.NewTransactionPG(db)
 
 	hasher := auth.NewHasher()
 	jwtBuilder := auth.NewJWTBuilder(cfg.JWTSecretKey(), cfg.JWTExpTime())
@@ -94,6 +96,7 @@ func main() {
 
 		withAPIHandler(http.MethodGet, "/api/user/balance", get.NewHandler(accountRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 		withAPIHandler(http.MethodPost, "/api/user/balance/withdraw", withdraw.NewHandler(usecaseCreateWithdraw, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
+		withAPIHandler(http.MethodGet, "/api/user/withdrawals", withdrawals.NewHandler(transactionRepo, log).Handle, middleware.CheckAuth(jwtBuilder, log)),
 	)
 
 	if err := app.run(ctx); err != nil {
