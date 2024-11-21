@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS accruals (
     user_guid uuid NOT NULL REFERENCES users (guid),
     status smallint NOT NULL DEFAULT 0,
     accrual integer NOT NULL DEFAULT 0,
-    uploaded_at timestamp with time zone
+    uploaded_at timestamp with time zone NOT NULL
 );
 
 CREATE INDEX accruals_user_guid_fk_idx ON accruals (user_guid);
