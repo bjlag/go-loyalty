@@ -21,8 +21,8 @@ type AccrualRepo interface {
 
 	Create(ctx context.Context, accrual *model.Accrual) error
 	UpdateStatus(ctx context.Context, orderNumber string, newStatus model.AccrualStatus) error
-	Add(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error
-	Withdraw(ctx context.Context, transaction model.Transaction) error
+	AddBalance(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error
+	WithdrawBalance(ctx context.Context, transaction model.Transaction) error
 }
 
 type AccrualPG struct {
@@ -36,7 +36,11 @@ func NewAccrualPG(db *sqlx.DB) *AccrualPG {
 }
 
 func (r AccrualPG) AccrualByOrderNumber(ctx context.Context, orderNumber string) (*model.Accrual, error) {
-	query := "SELECT order_number, user_guid, status, accrual, uploaded_at FROM accruals WHERE order_number = $1"
+	query := `
+		SELECT order_number, user_guid, status, accrual, uploaded_at 
+		FROM accruals 
+		WHERE order_number = $1
+	`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
@@ -60,7 +64,11 @@ func (r AccrualPG) AccrualByOrderNumber(ctx context.Context, orderNumber string)
 }
 
 func (r AccrualPG) AccrualsByUser(ctx context.Context, orderNumber string) ([]model.Accrual, error) {
-	query := "SELECT order_number, user_guid, status, accrual, uploaded_at FROM accruals WHERE user_guid = $1"
+	query := `
+		SELECT order_number, user_guid, status, accrual, uploaded_at 
+		FROM accruals 
+		WHERE user_guid = $1
+	`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
@@ -105,7 +113,11 @@ func (r AccrualPG) AccrualsByUser(ctx context.Context, orderNumber string) ([]mo
 }
 
 func (r AccrualPG) AccrualsInWork(ctx context.Context) ([]model.Accrual, error) {
-	query := "SELECT order_number, user_guid, status, accrual, uploaded_at FROM accruals WHERE status = $1 OR status = $2"
+	query := `
+		SELECT order_number, user_guid, status, accrual, uploaded_at 
+		FROM accruals 
+		WHERE status = $1 OR status = $2
+	`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
@@ -150,7 +162,10 @@ func (r AccrualPG) AccrualsInWork(ctx context.Context) ([]model.Accrual, error) 
 }
 
 func (r AccrualPG) Create(ctx context.Context, accrual *model.Accrual) error {
-	query := `INSERT INTO accruals (order_number, user_guid, status, accrual, uploaded_at) VALUES ($1, $2, $3, $4, $5)`
+	query := `
+		INSERT INTO accruals (order_number, user_guid, status, accrual, uploaded_at) 
+		VALUES ($1, $2, $3, $4, $5)
+	`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to prepare query: %w", err)
@@ -185,7 +200,7 @@ func (r AccrualPG) UpdateStatus(ctx context.Context, orderNumber string, newStat
 	return nil
 }
 
-func (r AccrualPG) Add(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error {
+func (r AccrualPG) AddBalance(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -194,17 +209,25 @@ func (r AccrualPG) Add(ctx context.Context, accrual model.Accrual, account model
 		_ = tx.Rollback()
 	}()
 
-	err = updateAccrualTx(tx, accrual)
+	err = updateAccrualTx(tx, accrual.Status, accrual.Accrual, accrual.OrderNumber)
 	if err != nil {
 		return err
 	}
 
-	err = addAccountTx(tx, account)
+	err = addAccountTx(tx, account.GUID, account.Balance, account.UpdatedAt)
 	if err != nil {
 		return err
 	}
 
-	err = addTransaction(tx, transaction)
+	err = addTransaction(
+		tx,
+		transaction.GUID,
+		transaction.AccountGUID,
+		transaction.OrderNumber,
+		transaction.Type,
+		transaction.Sum,
+		transaction.ProcessedAt,
+	)
 	if err != nil {
 		return err
 	}
@@ -217,7 +240,7 @@ func (r AccrualPG) Add(ctx context.Context, accrual model.Accrual, account model
 	return nil
 }
 
-func (r AccrualPG) Withdraw(ctx context.Context, transaction model.Transaction) error {
+func (r AccrualPG) WithdrawBalance(ctx context.Context, transaction model.Transaction) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -231,7 +254,15 @@ func (r AccrualPG) Withdraw(ctx context.Context, transaction model.Transaction) 
 		return err
 	}
 
-	err = addTransaction(tx, transaction)
+	err = addTransaction(
+		tx,
+		transaction.GUID,
+		transaction.AccountGUID,
+		transaction.OrderNumber,
+		transaction.Type,
+		transaction.Sum,
+		transaction.ProcessedAt,
+	)
 	if err != nil {
 		return err
 	}
@@ -244,7 +275,7 @@ func (r AccrualPG) Withdraw(ctx context.Context, transaction model.Transaction) 
 	return nil
 }
 
-func updateAccrualTx(tx *sql.Tx, model model.Accrual) error {
+func updateAccrualTx(tx *sql.Tx, status model.AccrualStatus, accrual uint, orderNumber string) error {
 	query := `UPDATE accruals SET status = $1, accrual = $2 WHERE order_number = $3`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -254,7 +285,7 @@ func updateAccrualTx(tx *sql.Tx, model model.Accrual) error {
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.Exec(model.Status, model.Accrual, model.OrderNumber)
+	_, err = stmt.Exec(status, accrual, orderNumber)
 	if err != nil {
 		return fmt.Errorf("failed to update accrual: %w", err)
 	}
@@ -262,7 +293,7 @@ func updateAccrualTx(tx *sql.Tx, model model.Accrual) error {
 	return nil
 }
 
-func addAccountTx(tx *sql.Tx, model model.Account) error {
+func addAccountTx(tx *sql.Tx, guid string, balance uint, updatedAt time.Time) error {
 	query := `
 		INSERT INTO accounts (guid, balance, updated_at)
 		VALUES ($1, $2, $3)
@@ -278,7 +309,7 @@ func addAccountTx(tx *sql.Tx, model model.Account) error {
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.Exec(model.GUID, model.Balance, model.UpdatedAt)
+	_, err = stmt.Exec(guid, balance, updatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to update account: %w", err)
 	}
@@ -311,7 +342,7 @@ func withdrawAccountTx(tx *sql.Tx, guid string, sum uint, updatedAt time.Time) e
 	return nil
 }
 
-func addTransaction(tx *sql.Tx, model model.Transaction) error {
+func addTransaction(tx *sql.Tx, guid, accountGUID, orderNumber string, tType model.TransactionType, sum uint, processedAt time.Time) error {
 	query := `
 		INSERT INTO transactions (guid, account_guid, order_number, type, sum, processed_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -324,7 +355,7 @@ func addTransaction(tx *sql.Tx, model model.Transaction) error {
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.Exec(model.GUID, model.AccountGUID, model.OrderNumber, model.Type, model.Sum, model.ProcessedAt)
+	_, err = stmt.Exec(guid, accountGUID, orderNumber, tType, sum, processedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert transaction: %w", err)
 	}

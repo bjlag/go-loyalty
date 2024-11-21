@@ -46,7 +46,7 @@ func (u *Usecase) CreateWithdraw(ctx context.Context, accountGUID, orderNumber s
 		time.Now(),
 	)
 
-	err = u.accrualRepo.Withdraw(ctx, transaction)
+	err = u.accrualRepo.WithdrawBalance(ctx, transaction)
 	if err != nil {
 		return err
 	}

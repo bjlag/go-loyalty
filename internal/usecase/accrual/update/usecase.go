@@ -139,7 +139,7 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 					time.Now(),
 				)
 
-				err = u.repo.Add(gCtx, mAccrual, mAccount, mTransaction)
+				err = u.repo.AddBalance(gCtx, mAccrual, mAccount, mTransaction)
 			} else {
 				err = u.repo.UpdateStatus(gCtx, accrual.OrderNumber, newStatus)
 			}

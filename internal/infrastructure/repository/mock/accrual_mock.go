@@ -80,18 +80,18 @@ func (mr *MockAccrualRepoMockRecorder) AccrualsInWork(ctx interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccrualsInWork", reflect.TypeOf((*MockAccrualRepo)(nil).AccrualsInWork), ctx)
 }
 
-// Add mocks base method.
-func (m *MockAccrualRepo) Add(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error {
+// AddBalance mocks base method.
+func (m *MockAccrualRepo) AddBalance(ctx context.Context, accrual model.Accrual, account model.Account, transaction model.Transaction) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", ctx, accrual, account, transaction)
+	ret := m.ctrl.Call(m, "AddBalance", ctx, accrual, account, transaction)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Add indicates an expected call of Add.
-func (mr *MockAccrualRepoMockRecorder) Add(ctx, accrual, account, transaction interface{}) *gomock.Call {
+// AddBalance indicates an expected call of AddBalance.
+func (mr *MockAccrualRepoMockRecorder) AddBalance(ctx, accrual, account, transaction interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockAccrualRepo)(nil).Add), ctx, accrual, account, transaction)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBalance", reflect.TypeOf((*MockAccrualRepo)(nil).AddBalance), ctx, accrual, account, transaction)
 }
 
 // Create mocks base method.
@@ -120,4 +120,18 @@ func (m *MockAccrualRepo) UpdateStatus(ctx context.Context, orderNumber string, 
 func (mr *MockAccrualRepoMockRecorder) UpdateStatus(ctx, orderNumber, newStatus interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockAccrualRepo)(nil).UpdateStatus), ctx, orderNumber, newStatus)
+}
+
+// WithdrawBalance mocks base method.
+func (m *MockAccrualRepo) WithdrawBalance(ctx context.Context, transaction model.Transaction) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithdrawBalance", ctx, transaction)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WithdrawBalance indicates an expected call of WithdrawBalance.
+func (mr *MockAccrualRepoMockRecorder) WithdrawBalance(ctx, transaction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawBalance", reflect.TypeOf((*MockAccrualRepo)(nil).WithdrawBalance), ctx, transaction)
 }
