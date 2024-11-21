@@ -24,6 +24,9 @@ func (c Client) OrderStatus(orderNumber string) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		switch resp.StatusCode {
