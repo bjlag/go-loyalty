@@ -7,8 +7,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 
 	"github.com/bjlag/go-loyalty/internal/model"
 )
@@ -198,7 +199,7 @@ func (r AccrualPG) Add(ctx context.Context, accrual model.Accrual, account model
 		return err
 	}
 
-	err = updateAccountTx(tx, account)
+	err = addAccountTx(tx, account)
 	if err != nil {
 		return err
 	}
@@ -225,12 +226,10 @@ func (r AccrualPG) Withdraw(ctx context.Context, transaction model.Transaction) 
 		_ = tx.Rollback()
 	}()
 
-	err = update2AccountTx(tx, transaction.AccountGUID, transaction.Sum, transaction.ProcessedAt)
+	err = withdrawAccountTx(tx, transaction.AccountGUID, transaction.Sum, transaction.ProcessedAt)
 	if err != nil {
 		return err
 	}
-
-	// увеличить итоговую сумму всех выплат
 
 	err = addTransaction(tx, transaction)
 	if err != nil {
@@ -263,7 +262,7 @@ func updateAccrualTx(tx *sql.Tx, model model.Accrual) error {
 	return nil
 }
 
-func updateAccountTx(tx *sql.Tx, model model.Account) error {
+func addAccountTx(tx *sql.Tx, model model.Account) error {
 	query := `
 		INSERT INTO accounts (guid, balance, updated_at)
 		VALUES ($1, $2, $3)
@@ -287,13 +286,14 @@ func updateAccountTx(tx *sql.Tx, model model.Account) error {
 	return nil
 }
 
-func update2AccountTx(tx *sql.Tx, guid string, sum int, updatedAt time.Time) error {
+func withdrawAccountTx(tx *sql.Tx, guid string, sum uint, updatedAt time.Time) error {
 	query := `
-		INSERT INTO accounts (guid, balance, updated_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO accounts (guid, balance, withdraw_sum, updated_at)
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (guid) DO UPDATE
-    		SET balance    = accounts.balance + excluded.balance,
-        		updated_at = excluded.updated_at;
+    		SET balance      = accounts.balance - excluded.balance,
+        		withdraw_sum = accounts.withdraw_sum + excluded.withdraw_sum,
+        		updated_at   = excluded.updated_at;
 	`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -303,7 +303,7 @@ func update2AccountTx(tx *sql.Tx, guid string, sum int, updatedAt time.Time) err
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.Exec(guid, sum, updatedAt)
+	_, err = stmt.Exec(guid, sum, sum, updatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to update account: %w", err)
 	}
