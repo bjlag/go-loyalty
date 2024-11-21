@@ -12,7 +12,7 @@ import (
 )
 
 type AccountRepo interface {
-	Balance(ctx context.Context, accountGUID string) (float32, error)
+	Balance(ctx context.Context, accountGUID string) (float32, float32, error)
 }
 
 type AccountPG struct {
@@ -25,29 +25,29 @@ func NewAccountPG(db *sqlx.DB) *AccrualPG {
 	}
 }
 
-func (r AccrualPG) Balance(ctx context.Context, accountGUID string) (float32, error) {
-	query := `SELECT balance FROM accounts WHERE guid = $1`
+func (r AccrualPG) Balance(ctx context.Context, accountGUID string) (float32, float32, error) {
+	query := `SELECT balance, withdraw_sum FROM accounts WHERE guid = $1`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
-		return 0, fmt.Errorf("failed to prepare query: %w", err)
+		return 0, 0, fmt.Errorf("failed to prepare query: %w", err)
 	}
 	defer func() {
 		_ = stmt.Close()
 	}()
 
-	var balance float32
+	var balance, withdraw float32
 	row := stmt.QueryRowContext(ctx, accountGUID)
 	if row.Err() != nil {
-		return 0, fmt.Errorf("failed to query account: %w", row.Err())
+		return 0, 0, fmt.Errorf("failed to query account: %w", row.Err())
 	}
 
-	if err := row.Scan(&balance); err != nil {
+	if err := row.Scan(&balance, &withdraw); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
+			return 0, 0, nil
 		}
 
-		return 0, fmt.Errorf("failed to scan row: %w", err)
+		return 0, 0, fmt.Errorf("failed to scan row: %w", err)
 	}
 
-	return balance, nil
+	return balance, withdraw, nil
 }

@@ -29,7 +29,7 @@ func NewUsecase(accrualRepo repository.AccrualRepo, accountRepo repository.Accou
 }
 
 func (u *Usecase) CreateWithdraw(ctx context.Context, accountGUID, orderNumber string, sum float32) error {
-	balance, err := u.accountRepo.Balance(ctx, accountGUID)
+	balance, _, err := u.accountRepo.Balance(ctx, accountGUID)
 	if err != nil {
 		return err
 	}

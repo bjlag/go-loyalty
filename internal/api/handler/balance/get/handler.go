@@ -30,7 +30,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	balance, err := h.repo.Balance(ctx, userGUID)
+	balance, withdraw, err := h.repo.Balance(ctx, userGUID)
 	if err != nil {
 		h.log.WithError(err).Error("Could not get balance")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -39,7 +39,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	resp := &Response{
 		Current:   balance,
-		Withdrawn: 0,
+		Withdrawn: withdraw,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
