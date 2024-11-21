@@ -31,7 +31,7 @@ func CheckAuth(jwt *auth.JWTBuilder, log logger.Logger) func(next http.Handler) 
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), "userGUID", userGUID)
+			ctx := context.WithValue(r.Context(), auth.UserGUIDKey, userGUID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
