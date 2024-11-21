@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bjlag/go-loyalty/internal/api"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
@@ -49,11 +50,10 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			Number:     row.OrderNumber,
 			Status:     strings.ToUpper(row.Status.String()),
 			Accrual:    row.Accrual,
-			UploadedAt: row.UploadedAt,
+			UploadedAt: api.Datetime(row.UploadedAt),
 		})
 	}
 
-	// todo дата в формате 2020-12-10T15:15:45+03:00
 	data, err := json.Marshal(resp)
 	if err != nil {
 		h.log.WithError(err).Error("Could not marshal response")

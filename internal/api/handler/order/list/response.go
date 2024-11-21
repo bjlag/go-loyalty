@@ -1,12 +1,14 @@
 package list
 
-import "time"
+import (
+	"github.com/bjlag/go-loyalty/internal/api"
+)
 
 type Response []Order
 
 type Order struct {
-	Number     string    `json:"number"`
-	Status     string    `json:"status"`
-	Accrual    uint      `json:"accrual"`
-	UploadedAt time.Time `json:"uploaded_at"`
+	Number     string       `json:"number"`
+	Status     string       `json:"status"`
+	Accrual    uint         `json:"accrual"`
+	UploadedAt api.Datetime `json:"uploaded_at"`
 }

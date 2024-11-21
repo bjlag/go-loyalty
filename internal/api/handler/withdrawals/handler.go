@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/bjlag/go-loyalty/internal/api"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/repository"
@@ -47,11 +48,10 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		resp = append(resp, Withdraw{
 			Order:       row.OrderNumber,
 			Sum:         float32(row.Sum),
-			ProcessedAt: row.ProcessedAt,
+			ProcessedAt: api.Datetime(row.ProcessedAt),
 		})
 	}
 
-	// todo дата в формате 2020-12-10T15:15:45+03:00
 	data, err := json.Marshal(resp)
 	if err != nil {
 		h.log.WithError(err).Error("Could not marshal response")
