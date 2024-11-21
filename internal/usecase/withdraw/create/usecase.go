@@ -38,13 +38,13 @@ func (u *Usecase) CreateWithdraw(ctx context.Context, accountGUID, orderNumber s
 		return ErrInsufficientBalanceOnAccount
 	}
 
-	transaction := model.Transaction{
-		GUID:        u.guidGen.Generate(),
-		AccountGUID: accountGUID,
-		OrderNumber: orderNumber,
-		Sum:         -int(sum),
-		ProcessedAt: time.Now(),
-	}
+	transaction := model.NewWithdrawTransaction(
+		u.guidGen.Generate(),
+		accountGUID,
+		orderNumber,
+		uint(sum),
+		time.Now(),
+	)
 
 	err = u.accrualRepo.Withdraw(ctx, transaction)
 	if err != nil {

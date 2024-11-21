@@ -131,13 +131,13 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 					UpdatedAt: time.Now(),
 				}
 
-				mTransaction := model.Transaction{
-					GUID:        u.guidGen.Generate(),
-					AccountGUID: mAccount.GUID,
-					OrderNumber: accrual.OrderNumber,
-					Sum:         int(newAccrual),
-					ProcessedAt: time.Now(),
-				}
+				mTransaction := model.NewAddTransaction(
+					u.guidGen.Generate(),
+					mAccount.GUID,
+					accrual.OrderNumber,
+					newAccrual,
+					time.Now(),
+				)
 
 				err = u.repo.Add(gCtx, mAccrual, mAccount, mTransaction)
 			} else {

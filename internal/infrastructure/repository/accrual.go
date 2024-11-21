@@ -313,8 +313,8 @@ func update2AccountTx(tx *sql.Tx, guid string, sum int, updatedAt time.Time) err
 
 func addTransaction(tx *sql.Tx, model model.Transaction) error {
 	query := `
-		INSERT INTO transactions (guid, account_guid, order_number, sum, processed_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO transactions (guid, account_guid, order_number, type, sum, processed_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -324,7 +324,7 @@ func addTransaction(tx *sql.Tx, model model.Transaction) error {
 		_ = stmt.Close()
 	}()
 
-	_, err = stmt.Exec(model.GUID, model.AccountGUID, model.OrderNumber, model.Sum, model.ProcessedAt)
+	_, err = stmt.Exec(model.GUID, model.AccountGUID, model.OrderNumber, model.Type, model.Sum, model.ProcessedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert transaction: %w", err)
 	}

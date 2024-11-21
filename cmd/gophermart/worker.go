@@ -52,18 +52,18 @@ func (w *accrualWorker) run(ctx context.Context) {
 
 			log := w.log.
 				WithField("order", result.OrderNumber).
-				WithField("user", result.UserGUID).
-				WithField("old_status", result.OldStatus.String()).
-				WithField("old_accrual", result.OldAccrual).
-				WithField("new_status", result.NewStatus.String()).
-				WithField("new_accrual", result.NewAccrual)
+				WithField("user", result.UserGUID)
 
 			if result.Err != nil {
 				log.WithError(result.Err).Error("Failed to update accrual")
 				continue
 			}
 
-			log.Info("Accrual updated")
+			log.WithField("old_status", result.OldStatus.String()).
+				WithField("old_accrual", result.OldAccrual).
+				WithField("new_status", result.NewStatus.String()).
+				WithField("new_accrual", result.NewAccrual).
+				Info("Accrual updated")
 		}
 	}()
 }
