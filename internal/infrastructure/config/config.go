@@ -135,17 +135,17 @@ func parseFlags() {
 			return nil
 		},
 	)
-	//flag.Func(
-	//	"r",
-	//	fmt.Sprintf("Accrual systm address: host:port (default \"%s:%d\")", defaultAccrualSystemHost, defaultAccrualSystemPort),
-	//	func(s string) error {
-	//		if accrualAddr, err = newAddr(s); err != nil {
-	//			return err
-	//		}
-	//
-	//		return nil
-	//	},
-	//)
+	flag.Func(
+		"r",
+		fmt.Sprintf("Accrual systm address: host:port (default \"%s:%d\")", defaultAccrualSystemHost, defaultAccrualSystemPort),
+		func(s string) error {
+			if accrualAddr, err = newAddr(s); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
 
 	flag.Parse()
 }
