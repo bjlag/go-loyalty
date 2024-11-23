@@ -5,16 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
+	"net/http"
 
-	"github.com/bjlag/go-loyalty/internal/infrastructure/client"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
-	"github.com/bjlag/go-loyalty/internal/infrastructure/service/accrual"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
@@ -71,36 +67,36 @@ func (a application) run(ctx context.Context) error {
 		return server.ListenAndServe()
 	})
 
-	g.Go(func() error {
-		a.log.Info("Accrual worker started")
-
-		restyClient := client.NewRestyClient(
-			client.WithTimeout(200*time.Millisecond),
-			client.WithRetryCount(2),
-			client.WithRetryWaitTime(100*time.Millisecond),
-		)
-
-		accrualClient := accrual.NewAccrualClient(restyClient, a.accrualAddr.host, a.accrualAddr.port)
-
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-gCtx.Done():
-				a.log.Info("Stopped accrual client")
-				return nil
-			case <-ticker.C:
-				resp, err := accrualClient.OrderStatus("12345678705")
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
-
-				fmt.Println(resp)
-			}
-		}
-	})
+	//g.Go(func() error {
+	//	a.log.Info("Accrual worker started")
+	//
+	//	restyClient := client.NewRestyClient(
+	//		client.WithTimeout(200*time.Millisecond),
+	//		client.WithRetryCount(2),
+	//		client.WithRetryWaitTime(100*time.Millisecond),
+	//	)
+	//
+	//	accrualClient := accrual.NewAccrualClient(restyClient, a.accrualAddr.host, a.accrualAddr.port)
+	//
+	//	ticker := time.NewTicker(time.Second)
+	//	defer ticker.Stop()
+	//
+	//	for {
+	//		select {
+	//		case <-gCtx.Done():
+	//			a.log.Info("Stopped accrual client")
+	//			return nil
+	//		case <-ticker.C:
+	//			resp, err := accrualClient.OrderStatus("12345678705")
+	//			if err != nil {
+	//				fmt.Println(err)
+	//				continue
+	//			}
+	//
+	//			fmt.Println(resp)
+	//		}
+	//	}
+	//})
 
 	g.Go(func() error {
 		<-gCtx.Done()
