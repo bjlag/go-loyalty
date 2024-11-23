@@ -9,9 +9,9 @@ type Client struct {
 	serviceURL string
 }
 
-func NewAccrualClient(client client.Client, serviceUrl string) *Client {
+func NewAccrualClient(client client.Client, serviceURL string) *Client {
 	return &Client{
 		client:     client,
-		serviceURL: serviceUrl,
+		serviceURL: serviceURL,
 	}
 }
