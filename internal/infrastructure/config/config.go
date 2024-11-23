@@ -9,23 +9,22 @@ import (
 )
 
 const (
-	defaultLogLevel          = "INFO"
-	defaultRunAddrHost       = "localhost"
-	defaultRunAddrPort       = 8080
-	defaultJWTSecretKey      = "secret"
-	defaultJWTExpTime        = 3 * time.Hour
-	defaultDatabaseURI       = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
-	defaultMigratePath       = "./migrations"
-	defaultAccrualSystemHost = "localhost"
-	defaultAccrualSystemPort = 9090
+	defaultLogLevel       = "INFO"
+	defaultRunAddrHost    = "localhost"
+	defaultRunAddrPort    = 8080
+	defaultJWTSecretKey   = "secret"
+	defaultJWTExpTime     = 3 * time.Hour
+	defaultDatabaseURI    = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
+	defaultMigratePath    = "./migrations"
+	defaultAccrualAddress = "http://localhost:9090"
 
-	envRunAddress           = "RUN_ADDRESS"
-	envLogLevel             = "LOG_LEVEL"
-	envJWTSecretKey         = "JWT_SECRET_KEY"
-	envJWTExpTime           = "JWT_EXP_TIME"
-	envDatabaseURI          = "DATABASE_URI"
-	envMigratePath          = "MIGRATE_SOURCE_PATH"
-	envAccrualSystemAddress = "ACCRUAL_SYSTEM_ADDRESS"
+	envRunAddress     = "RUN_ADDRESS"
+	envLogLevel       = "LOG_LEVEL"
+	envJWTSecretKey   = "JWT_SECRET_KEY"
+	envJWTExpTime     = "JWT_EXP_TIME"
+	envDatabaseURI    = "DATABASE_URI"
+	envMigratePath    = "MIGRATE_SOURCE_PATH"
+	envAccrualAddress = "ACCRUAL_SYSTEM_ADDRESS"
 )
 
 var (
@@ -35,7 +34,7 @@ var (
 	jwtExpTime   time.Duration
 	databaseURI  string
 	migratePath  string
-	accrualAddr  *addr
+	accrualAddr  string
 )
 
 type Configuration struct {
@@ -45,17 +44,13 @@ type Configuration struct {
 	jwtExpTime   time.Duration
 	databaseURI  string
 	migratePath  string
-	accrualAddr  addr
+	accrualAddr  string
 }
 
 func Parse() *Configuration {
 	runAddr = &addr{
 		host: defaultRunAddrHost,
 		port: defaultRunAddrPort,
-	}
-	accrualAddr = &addr{
-		host: defaultAccrualSystemHost,
-		port: defaultAccrualSystemPort,
 	}
 	jwtExpTime = defaultJWTExpTime
 
@@ -69,7 +64,7 @@ func Parse() *Configuration {
 		jwtExpTime:   jwtExpTime,
 		databaseURI:  databaseURI,
 		migratePath:  migratePath,
-		accrualAddr:  *accrualAddr,
+		accrualAddr:  accrualAddr,
 	}
 }
 
@@ -101,12 +96,8 @@ func (c Configuration) MigratePath() string {
 	return c.migratePath
 }
 
-func (c Configuration) AccrualSystemHost() string {
-	return c.accrualAddr.host
-}
-
-func (c Configuration) AccrualSystemPort() int {
-	return c.accrualAddr.port
+func (c Configuration) AccrualSystemAddress() string {
+	return c.accrualAddr
 }
 
 func parseFlags() {
@@ -116,6 +107,7 @@ func parseFlags() {
 	flag.StringVar(&jwtSecretKey, "s", defaultJWTSecretKey, "JWT secret key")
 	flag.StringVar(&databaseURI, "d", defaultDatabaseURI, "Database URI")
 	flag.StringVar(&migratePath, "m", defaultMigratePath, "Path to migration source files")
+	flag.StringVar(&accrualAddr, "r", defaultAccrualAddress, "Accrual system address")
 	flag.Func("e", "JWT token expiration time (default 3h)", func(s string) error {
 		jwtExpTime, err = time.ParseDuration(s)
 		if err != nil {
@@ -129,17 +121,6 @@ func parseFlags() {
 		fmt.Sprintf("Server address: host:port (default \"%s:%d\")", defaultRunAddrHost, defaultRunAddrPort),
 		func(s string) error {
 			if runAddr, err = newAddr(s); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	)
-	flag.Func(
-		"r",
-		fmt.Sprintf("Accrual systm address: host:port (default \"%s:%d\")", defaultAccrualSystemHost, defaultAccrualSystemPort),
-		func(s string) error {
-			if accrualAddr, err = newAddr(s); err != nil {
 				return err
 			}
 
@@ -169,6 +150,10 @@ func parseEnvs() {
 		migratePath = value
 	}
 
+	if value := os.Getenv(envAccrualAddress); value != "" {
+		accrualAddr = value
+	}
+
 	if value := os.Getenv(envJWTExpTime); value != "" {
 		if jwtExpTime, err = time.ParseDuration(value); err != nil {
 			logEnvError(envJWTExpTime, value, err)
@@ -180,14 +165,6 @@ func parseEnvs() {
 		if runAddr, err = newAddr(value); err != nil {
 			logEnvError(envRunAddress, value, err)
 			panic("failed to parse config: run address")
-		}
-	}
-
-	if value := os.Getenv(envAccrualSystemAddress); value != "" {
-		// value = http://localhost:44049
-		if accrualAddr, err = newAddr(value); err != nil {
-			logEnvError(envAccrualSystemAddress, value, err)
-			panic("failed to parse config: accrual system address")
 		}
 	}
 }

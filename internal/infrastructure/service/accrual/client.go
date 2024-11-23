@@ -1,8 +1,6 @@
 package accrual
 
 import (
-	"fmt"
-
 	"github.com/bjlag/go-loyalty/internal/infrastructure/client"
 )
 
@@ -11,9 +9,9 @@ type Client struct {
 	serviceURL string
 }
 
-func NewAccrualClient(client client.Client, host string, port int) *Client {
+func NewAccrualClient(client client.Client, serviceUrl string) *Client {
 	return &Client{
 		client:     client,
-		serviceURL: fmt.Sprintf("http://%s:%d", host, port),
+		serviceURL: serviceUrl,
 	}
 }
