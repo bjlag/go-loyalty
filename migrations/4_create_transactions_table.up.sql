@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     account_guid uuid NOT NULL REFERENCES accounts (guid),
     order_number varchar(50) NOT NULL,
     type smallint NOT NULL,
-    sum integer NOT NULL,
+    sum double precision NOT NULL,
     processed_at timestamp with time zone NOT NULL
 );
 

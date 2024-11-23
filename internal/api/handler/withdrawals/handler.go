@@ -47,7 +47,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	for _, row := range rows {
 		resp = append(resp, Withdraw{
 			Order:       row.OrderNumber,
-			Sum:         float32(row.Sum),
+			Sum:         row.Sum,
 			ProcessedAt: api.Datetime(row.ProcessedAt),
 		})
 	}

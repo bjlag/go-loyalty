@@ -276,7 +276,7 @@ func (r AccrualPG) WithdrawBalance(ctx context.Context, transaction model.Transa
 	return nil
 }
 
-func updateAccrualTx(tx *sql.Tx, status model.AccrualStatus, accrual uint, orderNumber string) error {
+func updateAccrualTx(tx *sql.Tx, status model.AccrualStatus, accrual float64, orderNumber string) error {
 	query := `UPDATE accruals SET status = $1, accrual = $2 WHERE order_number = $3`
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -294,7 +294,7 @@ func updateAccrualTx(tx *sql.Tx, status model.AccrualStatus, accrual uint, order
 	return nil
 }
 
-func addAccountTx(tx *sql.Tx, guid string, balance uint, updatedAt time.Time) error {
+func addAccountTx(tx *sql.Tx, guid string, balance float64, updatedAt time.Time) error {
 	query := `
 		INSERT INTO accounts (guid, balance, updated_at)
 		VALUES ($1, $2, $3)
@@ -318,7 +318,7 @@ func addAccountTx(tx *sql.Tx, guid string, balance uint, updatedAt time.Time) er
 	return nil
 }
 
-func withdrawAccountTx(tx *sql.Tx, guid string, sum uint, updatedAt time.Time) error {
+func withdrawAccountTx(tx *sql.Tx, guid string, sum float64, updatedAt time.Time) error {
 	query := `
 		INSERT INTO accounts (guid, balance, withdraw_sum, updated_at)
 		VALUES ($1, $2, $3, $4)
@@ -343,7 +343,7 @@ func withdrawAccountTx(tx *sql.Tx, guid string, sum uint, updatedAt time.Time) e
 	return nil
 }
 
-func addTransaction(tx *sql.Tx, guid, accountGUID, orderNumber string, tType model.TransactionType, sum uint, processedAt time.Time) error {
+func addTransaction(tx *sql.Tx, guid, accountGUID, orderNumber string, tType model.TransactionType, sum float64, processedAt time.Time) error {
 	query := `
 		INSERT INTO transactions (guid, account_guid, order_number, type, sum, processed_at)
 		VALUES ($1, $2, $3, $4, $5, $6)

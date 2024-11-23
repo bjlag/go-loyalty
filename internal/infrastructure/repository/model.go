@@ -31,8 +31,8 @@ func (u user) export() *model.User {
 type accrual struct {
 	OrderNumber string    `db:"order_number"`
 	UserGUID    string    `db:"user_guid"`
-	Status      uint      `db:"status"`
-	Accrual     uint      `db:"accrual"`
+	Status      float64   `db:"status"`
+	Accrual     float64   `db:"accrual"`
 	UploadedAt  time.Time `db:"uploaded_at"`
 }
 
@@ -51,7 +51,7 @@ type transaction struct {
 	AccountGUID string                `db:"account_guid"`
 	OrderNumber string                `db:"order_number"`
 	Type        model.TransactionType `db:"type"`
-	Sum         uint                  `db:"sum"`
+	Sum         float64               `db:"sum"`
 	ProcessedAt time.Time             `db:"processed_at"`
 }
 

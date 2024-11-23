@@ -1,4 +1,4 @@
-//go:generate mockgen -source ${GOFILE} -package mock -destination mock/accrual_mock.go
+//go:generate mockgen -source ${GOFILE} -package mock -destination mock/account_mock.go
 
 package repository
 
@@ -12,7 +12,7 @@ import (
 )
 
 type AccountRepo interface {
-	Balance(ctx context.Context, accountGUID string) (float32, float32, error)
+	Balance(ctx context.Context, accountGUID string) (float64, float64, error)
 }
 
 type AccountPG struct {
@@ -25,7 +25,7 @@ func NewAccountPG(db *sqlx.DB) *AccrualPG {
 	}
 }
 
-func (r AccrualPG) Balance(ctx context.Context, accountGUID string) (float32, float32, error) {
+func (r AccrualPG) Balance(ctx context.Context, accountGUID string) (float64, float64, error) {
 	query := `SELECT balance, withdraw_sum FROM accounts WHERE guid = $1`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -35,7 +35,7 @@ func (r AccrualPG) Balance(ctx context.Context, accountGUID string) (float32, fl
 		_ = stmt.Close()
 	}()
 
-	var balance, withdraw float32
+	var balance, withdraw float64
 	row := stmt.QueryRowContext(ctx, accountGUID)
 	if row.Err() != nil {
 		return 0, 0, fmt.Errorf("failed to query account: %w", row.Err())

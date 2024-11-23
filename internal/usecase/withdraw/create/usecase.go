@@ -28,7 +28,7 @@ func NewUsecase(accrualRepo repository.AccrualRepo, accountRepo repository.Accou
 	}
 }
 
-func (u *Usecase) CreateWithdraw(ctx context.Context, accountGUID, orderNumber string, sum float32) error {
+func (u *Usecase) CreateWithdraw(ctx context.Context, accountGUID, orderNumber string, sum float64) error {
 	balance, _, err := u.accountRepo.Balance(ctx, accountGUID)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (u *Usecase) CreateWithdraw(ctx context.Context, accountGUID, orderNumber s
 		u.guidGen.Generate(),
 		accountGUID,
 		orderNumber,
-		uint(sum),
+		sum,
 		time.Now(),
 	)
 

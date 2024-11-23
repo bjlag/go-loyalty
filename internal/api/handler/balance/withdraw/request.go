@@ -3,6 +3,7 @@ package withdraw
 import (
 	"encoding/json"
 	"errors"
+
 	"github.com/bjlag/go-loyalty/internal/infrastructure/validator"
 )
 
@@ -13,7 +14,7 @@ var (
 
 type Request struct {
 	Order string  `json:"order"`
-	Sum   float32 `json:"sum"`
+	Sum   float64 `json:"sum"`
 }
 
 func (r *Request) UnmarshalJSON(b []byte) error {

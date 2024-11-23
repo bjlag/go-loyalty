@@ -34,9 +34,9 @@ type Result struct {
 	OrderNumber string
 	UserGUID    string
 	OldStatus   model.AccrualStatus
-	OldAccrual  uint
+	OldAccrual  float64
 	NewStatus   *model.AccrualStatus
-	NewAccrual  *uint
+	NewAccrual  *float64
 	Err         error
 }
 
@@ -44,9 +44,9 @@ func NewResult(
 	orderNumber string,
 	userGUID string,
 	oldStatus model.AccrualStatus,
-	oldAccrual uint,
+	oldAccrual float64,
 	newStatus *model.AccrualStatus,
-	newAccrual *uint,
+	newAccrual *float64,
 	err error,
 ) *Result {
 	return &Result{
@@ -111,10 +111,12 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 				return nil
 			}
 
-			var newAccrual uint
+			var newAccrual float64
 			if resp.Accrual != nil {
 				newAccrual = *resp.Accrual
 			}
+
+			newAccrual = 500.50
 
 			if newAccrual > 0 {
 				mAccrual := model.Accrual{

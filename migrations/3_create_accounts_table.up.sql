@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS accounts (
     guid uuid NOT NULL PRIMARY KEY REFERENCES users (guid),
-    balance integer NOT NULL DEFAULT 0,
-    withdraw_sum integer NOT NULL DEFAULT 0,
+    balance double precision NOT NULL DEFAULT 0,
+    withdraw_sum double precision NOT NULL DEFAULT 0,
     updated_at timestamp with time zone NOT NULL
 );
 

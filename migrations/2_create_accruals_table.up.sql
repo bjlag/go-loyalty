@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS accruals (
     order_number varchar(50) NOT NULL PRIMARY KEY,
     user_guid uuid NOT NULL REFERENCES users (guid),
     status smallint NOT NULL DEFAULT 0,
-    accrual integer NOT NULL DEFAULT 0,
+    accrual double precision NOT NULL DEFAULT 0,
     uploaded_at timestamp with time zone NOT NULL
 );
 

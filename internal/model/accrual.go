@@ -29,7 +29,7 @@ type Accrual struct {
 	OrderNumber string
 	UserGUID    string
 	Status      AccrualStatus
-	Accrual     uint
+	Accrual     float64
 	UploadedAt  time.Time
 }
 

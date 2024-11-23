@@ -9,6 +9,6 @@ type Response []Order
 type Order struct {
 	Number     string       `json:"number"`
 	Status     string       `json:"status"`
-	Accrual    uint         `json:"accrual"`
+	Accrual    float64      `json:"accrual"`
 	UploadedAt api.Datetime `json:"uploaded_at"`
 }

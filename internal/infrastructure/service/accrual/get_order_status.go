@@ -14,9 +14,9 @@ var (
 )
 
 type Response struct {
-	Order   string `json:"order"`
-	Status  string `json:"status"`
-	Accrual *uint  `json:"accrual,omitempty"`
+	Order   string   `json:"order"`
+	Status  string   `json:"status"`
+	Accrual *float64 `json:"accrual,omitempty"`
 }
 
 func (c Client) OrderStatus(orderNumber string) (*Response, error) {

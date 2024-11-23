@@ -14,11 +14,11 @@ type Transaction struct {
 	AccountGUID string
 	OrderNumber string
 	Type        TransactionType
-	Sum         uint
+	Sum         float64
 	ProcessedAt time.Time
 }
 
-func NewAddTransaction(guid, accountGUID, orderNumber string, sum uint, processedAt time.Time) Transaction {
+func NewAddTransaction(guid, accountGUID, orderNumber string, sum float64, processedAt time.Time) Transaction {
 	return Transaction{
 		GUID:        guid,
 		AccountGUID: accountGUID,
@@ -29,7 +29,7 @@ func NewAddTransaction(guid, accountGUID, orderNumber string, sum uint, processe
 	}
 }
 
-func NewWithdrawTransaction(guid, accountGUID, orderNumber string, sum uint, processedAt time.Time) Transaction {
+func NewWithdrawTransaction(guid, accountGUID, orderNumber string, sum float64, processedAt time.Time) Transaction {
 	return Transaction{
 		GUID:        guid,
 		AccountGUID: accountGUID,

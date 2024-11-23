@@ -4,7 +4,7 @@ import "time"
 
 type Account struct {
 	GUID        string
-	Balance     uint
-	WithdrawSum uint
+	Balance     float64
+	WithdrawSum float64
 	UpdatedAt   time.Time
 }
