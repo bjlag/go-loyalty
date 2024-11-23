@@ -172,25 +172,26 @@ func parseEnvs() {
 	if value := os.Getenv(envJWTExpTime); value != "" {
 		if jwtExpTime, err = time.ParseDuration(value); err != nil {
 			logEnvError(envJWTExpTime, value, err)
-			os.Exit(2)
+			panic("failed to parse config: jwt expiration time duration")
 		}
 	}
 
 	if value := os.Getenv(envRunAddress); value != "" {
 		if runAddr, err = newAddr(value); err != nil {
 			logEnvError(envRunAddress, value, err)
-			os.Exit(2)
+			panic("failed to parse config: run address")
 		}
 	}
 
 	if value := os.Getenv(envAccrualSystemAddress); value != "" {
+		// value = http://localhost:44049
 		if accrualAddr, err = newAddr(value); err != nil {
 			logEnvError(envAccrualSystemAddress, value, err)
-			os.Exit(2)
+			panic("failed to parse config: accrual system address")
 		}
 	}
 }
 
 func logEnvError(env, value string, err error) {
-	log.Fatalf("failed to parse environment variable %s=%s: %v", env, value, err)
+	log.Printf("failed to parse environment variable %s=%s: %v", env, value, err)
 }
