@@ -184,11 +184,12 @@ func parseEnvs() {
 	}
 
 	if value := os.Getenv(envAccrualSystemAddress); value != "" {
-		if accrualAddr, err = newAddr(value); err != nil {
-			logEnvError(envAccrualSystemAddress, value, err)
-			os.Exit(2)
-		}
-		fmt.Println(accrualAddr)
+		log.Println(value)
+		//if accrualAddr, err = newAddr(value); err != nil {
+		//	logEnvError(envAccrualSystemAddress, value, err)
+		//	os.Exit(2)
+		//}
+		log.Println(accrualAddr)
 	}
 }
 
