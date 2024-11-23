@@ -135,17 +135,17 @@ func parseFlags() {
 			return nil
 		},
 	)
-	flag.Func(
-		"r",
-		fmt.Sprintf("Accrual systm address: host:port (default \"%s:%d\")", defaultAccrualSystemHost, defaultAccrualSystemPort),
-		func(s string) error {
-			if accrualAddr, err = newAddr(s); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	)
+	//flag.Func(
+	//	"r",
+	//	fmt.Sprintf("Accrual systm address: host:port (default \"%s:%d\")", defaultAccrualSystemHost, defaultAccrualSystemPort),
+	//	func(s string) error {
+	//		if accrualAddr, err = newAddr(s); err != nil {
+	//			return err
+	//		}
+	//
+	//		return nil
+	//	},
+	//)
 
 	flag.Parse()
 }
@@ -182,13 +182,13 @@ func parseEnvs() {
 			os.Exit(2)
 		}
 	}
-
-	if value := os.Getenv(envAccrualSystemAddress); value != "" {
-		if accrualAddr, err = newAddr(value); err != nil {
-			logEnvError(envAccrualSystemAddress, value, err)
-			os.Exit(2)
-		}
-	}
+	//
+	//if value := os.Getenv(envAccrualSystemAddress); value != "" {
+	//	if accrualAddr, err = newAddr(value); err != nil {
+	//		logEnvError(envAccrualSystemAddress, value, err)
+	//		os.Exit(2)
+	//	}
+	//}
 }
 
 func logEnvError(env, value string, err error) {
