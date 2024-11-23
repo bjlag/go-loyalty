@@ -116,8 +116,6 @@ func (u Usecase) Update(ctx context.Context, resultCh chan *Result) error {
 				newAccrual = *resp.Accrual
 			}
 
-			newAccrual = 500.50
-
 			if newAccrual > 0 {
 				mAccrual := model.Accrual{
 					OrderNumber: accrual.OrderNumber,
