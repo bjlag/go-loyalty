@@ -36,6 +36,7 @@ func TestParse_Default(t *testing.T) {
 	assert.Equal(t, 3*time.Hour, got.JWTExpTime())
 	assert.Equal(t, "postgres://postgres:secret@localhost:5432/master?sslmode=disable", got.DatabaseURI())
 	assert.Equal(t, "./migrations", got.MigratePath())
+	assert.Equal(t, "http://localhost:9090", got.AccrualSystemAddress())
 }
 
 func TestParse_Flags(t *testing.T) {
@@ -51,6 +52,7 @@ func TestParse_Flags(t *testing.T) {
 		"-e", "1h",
 		"-d", "new_db_uri",
 		"-m", "new_migration_path",
+		"-r", "http://new:9999",
 	}
 
 	got := config.Parse()
@@ -62,6 +64,7 @@ func TestParse_Flags(t *testing.T) {
 	assert.Equal(t, 1*time.Hour, got.JWTExpTime())
 	assert.Equal(t, "new_db_uri", got.DatabaseURI())
 	assert.Equal(t, "new_migration_path", got.MigratePath())
+	assert.Equal(t, "http://new:9999", got.AccrualSystemAddress())
 }
 
 func TestParse_Envs(t *testing.T) {
@@ -72,12 +75,13 @@ func TestParse_Envs(t *testing.T) {
 	os.Args = []string{"cmd"}
 
 	envs := map[string]string{
-		"RUN_ADDRESS":         "127.0.0.1:8888",
-		"LOG_LEVEL":           "DEBUG",
-		"JWT_SECRET_KEY":      "new_secret",
-		"JWT_EXP_TIME":        "1h",
-		"DATABASE_URI":        "new_db_uri",
-		"MIGRATE_SOURCE_PATH": "new_migration_path",
+		"RUN_ADDRESS":            "127.0.0.1:8888",
+		"LOG_LEVEL":              "DEBUG",
+		"JWT_SECRET_KEY":         "new_secret",
+		"JWT_EXP_TIME":           "1h",
+		"DATABASE_URI":           "new_db_uri",
+		"MIGRATE_SOURCE_PATH":    "new_migration_path",
+		"ACCRUAL_SYSTEM_ADDRESS": "http://new:9999",
 	}
 
 	for e, v := range envs {
@@ -97,6 +101,7 @@ func TestParse_Envs(t *testing.T) {
 	assert.Equal(t, 1*time.Hour, got.JWTExpTime())
 	assert.Equal(t, "new_db_uri", got.DatabaseURI())
 	assert.Equal(t, "new_migration_path", got.MigratePath())
+	assert.Equal(t, "http://new:9999", got.AccrualSystemAddress())
 
 }
 
@@ -113,15 +118,17 @@ func TestParse_EnvsOverwriteFlags(t *testing.T) {
 		"-e", "1h",
 		"-d", "new_db_uri",
 		"-m", "new_migration_path",
+		"-r", "http://loc:9999",
 	}
 
 	envs := map[string]string{
-		"RUN_ADDRESS":         "127.0.0.5:9999",
-		"LOG_LEVEL":           "ERROR",
-		"JWT_SECRET_KEY":      "new_secret_from_env",
-		"JWT_EXP_TIME":        "5h",
-		"DATABASE_URI":        "new_db_uri_from_env",
-		"MIGRATE_SOURCE_PATH": "new_migration_path_from_env",
+		"RUN_ADDRESS":            "127.0.0.5:9999",
+		"LOG_LEVEL":              "ERROR",
+		"JWT_SECRET_KEY":         "new_secret_from_env",
+		"JWT_EXP_TIME":           "5h",
+		"DATABASE_URI":           "new_db_uri_from_env",
+		"MIGRATE_SOURCE_PATH":    "new_migration_path_from_env",
+		"ACCRUAL_SYSTEM_ADDRESS": "http://local:8888",
 	}
 
 	for e, v := range envs {
@@ -141,5 +148,5 @@ func TestParse_EnvsOverwriteFlags(t *testing.T) {
 	assert.Equal(t, 5*time.Hour, got.JWTExpTime())
 	assert.Equal(t, "new_db_uri_from_env", got.DatabaseURI())
 	assert.Equal(t, "new_migration_path_from_env", got.MigratePath())
-
+	assert.Equal(t, "http://local:8888", got.AccrualSystemAddress())
 }

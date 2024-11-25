@@ -9,42 +9,46 @@ import (
 )
 
 const (
-	defaultRunAddrHost  = "localhost"
-	defaultRunAddrPort  = 8080
-	defaultLogLevel     = "INFO"
-	defaultJWTSecretKey = "secret"
-	defaultJWTExpTime   = 3 * time.Hour
-	defaultDatabaseURI  = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
-	defaultMigratePath  = "./migrations"
+	defaultLogLevel       = "INFO"
+	defaultRunAddrHost    = "localhost"
+	defaultRunAddrPort    = 8080
+	defaultJWTSecretKey   = "secret"
+	defaultJWTExpTime     = 3 * time.Hour
+	defaultDatabaseURI    = "postgres://postgres:secret@localhost:5432/master?sslmode=disable"
+	defaultMigratePath    = "./migrations"
+	defaultAccrualAddress = "http://localhost:9090"
 
-	envRunAddress   = "RUN_ADDRESS"
-	envLogLevel     = "LOG_LEVEL"
-	envJWTSecretKey = "JWT_SECRET_KEY"
-	envJWTExpTime   = "JWT_EXP_TIME"
-	envDatabaseURI  = "DATABASE_URI"
-	envMigratePath  = "MIGRATE_SOURCE_PATH"
+	envRunAddress     = "RUN_ADDRESS"
+	envLogLevel       = "LOG_LEVEL"
+	envJWTSecretKey   = "JWT_SECRET_KEY"
+	envJWTExpTime     = "JWT_EXP_TIME"
+	envDatabaseURI    = "DATABASE_URI"
+	envMigratePath    = "MIGRATE_SOURCE_PATH"
+	envAccrualAddress = "ACCRUAL_SYSTEM_ADDRESS"
 )
 
 var (
 	logLevel     string
-	addr         *runAddr
+	runAddr      *addr
 	jwtSecretKey string
 	jwtExpTime   time.Duration
 	databaseURI  string
 	migratePath  string
+	accrualAddr  string
 )
 
 type Configuration struct {
-	runAddr      runAddr
+	runAddr      addr
 	logLevel     string
 	jwtSecretKey string
 	jwtExpTime   time.Duration
 	databaseURI  string
 	migratePath  string
+	accrualAddr  string
 }
 
 func Parse() *Configuration {
-	addr = &runAddr{
+	runAddr = &addr{
 		host: defaultRunAddrHost,
 		port: defaultRunAddrPort,
 	}
@@ -54,12 +58,13 @@ func Parse() *Configuration {
 	parseEnvs()
 
 	return &Configuration{
-		runAddr:      *addr,
+		runAddr:      *runAddr,
 		logLevel:     logLevel,
 		jwtSecretKey: jwtSecretKey,
 		jwtExpTime:   jwtExpTime,
 		databaseURI:  databaseURI,
 		migratePath:  migratePath,
+		accrualAddr:  accrualAddr,
 	}
 }
 
@@ -91,6 +96,10 @@ func (c Configuration) MigratePath() string {
 	return c.migratePath
 }
 
+func (c Configuration) AccrualSystemAddress() string {
+	return c.accrualAddr
+}
+
 func parseFlags() {
 	var err error
 
@@ -98,6 +107,7 @@ func parseFlags() {
 	flag.StringVar(&jwtSecretKey, "s", defaultJWTSecretKey, "JWT secret key")
 	flag.StringVar(&databaseURI, "d", defaultDatabaseURI, "Database URI")
 	flag.StringVar(&migratePath, "m", defaultMigratePath, "Path to migration source files")
+	flag.StringVar(&accrualAddr, "r", defaultAccrualAddress, "Accrual system address")
 	flag.Func("e", "JWT token expiration time (default 3h)", func(s string) error {
 		jwtExpTime, err = time.ParseDuration(s)
 		if err != nil {
@@ -110,7 +120,7 @@ func parseFlags() {
 		"a",
 		fmt.Sprintf("Server address: host:port (default \"%s:%d\")", defaultRunAddrHost, defaultRunAddrPort),
 		func(s string) error {
-			if addr, err = newRunAddr(s); err != nil {
+			if runAddr, err = newAddr(s); err != nil {
 				return err
 			}
 
@@ -140,21 +150,25 @@ func parseEnvs() {
 		migratePath = value
 	}
 
+	if value := os.Getenv(envAccrualAddress); value != "" {
+		accrualAddr = value
+	}
+
 	if value := os.Getenv(envJWTExpTime); value != "" {
 		if jwtExpTime, err = time.ParseDuration(value); err != nil {
 			logEnvError(envJWTExpTime, value, err)
-			os.Exit(2)
+			panic("failed to parse config: jwt expiration time duration")
 		}
 	}
 
 	if value := os.Getenv(envRunAddress); value != "" {
-		if addr, err = newRunAddr(value); err != nil {
+		if runAddr, err = newAddr(value); err != nil {
 			logEnvError(envRunAddress, value, err)
-			os.Exit(2)
+			panic("failed to parse config: run address")
 		}
 	}
 }
 
 func logEnvError(env, value string, err error) {
-	log.Fatalf("failed to parse environment variable %s=%s: %v", env, value, err)
+	log.Printf("failed to parse environment variable %s=%s: %v", env, value, err)
 }

@@ -55,11 +55,11 @@ func (l *ZapLog) Errorf(template string, args ...any) {
 	l.logger.Errorf(template, args...)
 }
 
-func (l *ZapLog) Warning(msg string) {
+func (l *ZapLog) Warn(msg string) {
 	l.logger.Warn(msg)
 }
 
-func (l *ZapLog) Warningf(template string, args ...any) {
+func (l *ZapLog) Warnf(template string, args ...any) {
 	l.logger.Warnf(template, args...)
 }
 

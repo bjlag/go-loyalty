@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
-	"github.com/bjlag/go-loyalty/internal/usecase/register"
+	"github.com/bjlag/go-loyalty/internal/usecase/user/register"
 )
 
 type Handler struct {
@@ -27,14 +27,8 @@ func (h Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		if errors.Is(err, errInvalidLogin) || errors.Is(err, errInvalidPassword) {
-			h.log.WithError(err).Warning("invalid request")
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-
-		h.log.WithError(err).Error("error decoding request")
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		h.log.WithError(err).Warn("invalid request")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 

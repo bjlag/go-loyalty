@@ -12,13 +12,14 @@ import (
 
 	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 const appVersion = "1.0.0"
 
 var errNoLogger = errors.New("no logger provided (use 'withLogger' option)")
 
-type runAddr struct {
+type addr struct {
 	host string
 	port int
 }
@@ -31,7 +32,7 @@ type apiHandler struct {
 }
 
 type application struct {
-	runAddr     runAddr
+	runAddr     addr
 	log         logger.Logger
 	apiHandlers []apiHandler
 }
@@ -50,11 +51,6 @@ func (a application) run(ctx context.Context) error {
 		return errNoLogger
 	}
 
-	a.log.
-		WithField("host", a.runAddr.host).
-		WithField("port", a.runAddr.port).
-		Info("Starting server")
-
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", a.runAddr.host, a.runAddr.port),
 		Handler: a.router(),
@@ -63,6 +59,11 @@ func (a application) run(ctx context.Context) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
+		a.log.
+			WithField("host", a.runAddr.host).
+			WithField("port", a.runAddr.port).
+			Info("Starting server")
+
 		return server.ListenAndServe()
 	})
 
@@ -83,6 +84,7 @@ func (a application) router() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(
+		chiMiddleware.RequestID,
 		middleware.LogRequest(a.log),
 		middleware.Gzip(a.log),
 	)

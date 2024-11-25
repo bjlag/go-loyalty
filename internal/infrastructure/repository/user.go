@@ -22,14 +22,14 @@ type UserPG struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) *UserPG {
+func NewUserPG(db *sqlx.DB) *UserPG {
 	return &UserPG{
 		db: db,
 	}
 }
 
 func (r UserPG) FindByLogin(ctx context.Context, login string) (*model.User, error) {
-	query := "SELECT * FROM users WHERE login = $1"
+	query := "SELECT guid, login, password FROM users WHERE login = $1"
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)

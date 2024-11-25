@@ -26,8 +26,8 @@ func TestLogRequest(t *testing.T) {
 			args: args{
 				log: func(ctrl *gomock.Controller) *mock.MockLogger {
 					mockLog := mock.NewMockLogger(ctrl)
+					mockLog.EXPECT().WithField("request_id", gomock.Any()).Return(mockLog).AnyTimes()
 					mockLog.EXPECT().WithField("method", "POST").Return(mockLog).AnyTimes()
-					mockLog.EXPECT().WithField("uri", "url").Return(mockLog).AnyTimes()
 					mockLog.EXPECT().WithField("uri", "/url").Return(mockLog).AnyTimes()
 					mockLog.EXPECT().WithField("status", 200).Return(mockLog).AnyTimes()
 					mockLog.EXPECT().WithField("duration", gomock.Any()).Return(mockLog).AnyTimes()

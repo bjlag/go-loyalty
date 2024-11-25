@@ -53,7 +53,7 @@ func (mr *MockUserRepositoryMockRecorder) FindByLogin(ctx, login interface{}) *g
 // Insert mocks base method.
 func (m *MockUserRepository) Insert(ctx context.Context, user *model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", ctx, user)
+	ret := m.ctrl.Call(m, "Create", ctx, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -61,5 +61,5 @@ func (m *MockUserRepository) Insert(ctx context.Context, user *model.User) error
 // Insert indicates an expected call of Insert.
 func (mr *MockUserRepositoryMockRecorder) Insert(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUserRepository)(nil).Insert), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserRepository)(nil).Insert), ctx, user)
 }

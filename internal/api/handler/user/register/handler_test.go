@@ -13,22 +13,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bjlag/go-loyalty/internal/api/handler/login"
-	"github.com/bjlag/go-loyalty/internal/api/handler/register"
+	"github.com/bjlag/go-loyalty/internal/api/handler/user/login"
+	"github.com/bjlag/go-loyalty/internal/api/handler/user/register"
 	"github.com/bjlag/go-loyalty/internal/infrastructure/auth"
 	mockAuth "github.com/bjlag/go-loyalty/internal/infrastructure/auth/mock"
 	mockGuid "github.com/bjlag/go-loyalty/internal/infrastructure/guid/mock"
 	mockLog "github.com/bjlag/go-loyalty/internal/infrastructure/logger/mock"
 	mockRep "github.com/bjlag/go-loyalty/internal/infrastructure/repository/mock"
 	"github.com/bjlag/go-loyalty/internal/model"
-	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/register"
+	ucRegister "github.com/bjlag/go-loyalty/internal/usecase/user/register"
 )
 
 func TestHandler_Handle(t *testing.T) {
 	jwtBuilder := auth.NewJWTBuilder("secret", 1*time.Hour)
 
 	type args struct {
-		rep       func(ctrl *gomock.Controller) *mockRep.MockUserRepository
+		repo      func(ctrl *gomock.Controller) *mockRep.MockUserRepository
 		hasher    func(ctrl *gomock.Controller) *mockAuth.MockIHasher
 		generator func(ctrl *gomock.Controller) *mockGuid.MockIGenerator
 		log       func(ctrl *gomock.Controller) *mockLog.MockLogger
@@ -48,7 +48,7 @@ func TestHandler_Handle(t *testing.T) {
 		{
 			name: "success",
 			args: args{
-				rep: func(ctrl *gomock.Controller) *mockRep.MockUserRepository {
+				repo: func(ctrl *gomock.Controller) *mockRep.MockUserRepository {
 					repUserMock := mockRep.NewMockUserRepository(ctrl)
 
 					user := &model.User{
@@ -88,7 +88,7 @@ func TestHandler_Handle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
-			usecase := ucRegister.NewUsecase(tt.args.rep(ctrl), tt.args.generator(ctrl), tt.args.hasher(ctrl), jwtBuilder)
+			usecase := ucRegister.NewUsecase(tt.args.repo(ctrl), tt.args.generator(ctrl), tt.args.hasher(ctrl), jwtBuilder)
 			handler := http.HandlerFunc(register.NewHandler(usecase, tt.args.log(ctrl)).Handle)
 
 			srv := httptest.NewServer(handler)

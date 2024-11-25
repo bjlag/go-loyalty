@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 	"net/http"
+
+	"github.com/bjlag/go-loyalty/internal/infrastructure/logger"
 )
 
 type option func(a *application)
 
 func withRunAddr(host string, port int) option {
 	return func(a *application) {
-		a.runAddr = runAddr{
+		a.runAddr = addr{
 			host: host,
 			port: port,
 		}

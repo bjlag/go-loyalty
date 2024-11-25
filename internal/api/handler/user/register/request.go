@@ -11,6 +11,7 @@ const (
 	maxLenLogin = 20
 	// bcrypt: password length should not exceed 72 bytes
 	maxLenPassword = 72
+	minLenPassword = 6
 )
 
 var (
@@ -46,12 +47,12 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 		errs = append(errs, fmt.Errorf("%w: email length exceeds 50 bytes", errInvalidLogin))
 	}
 
-	if r.Password == "" {
-		errs = append(errs, fmt.Errorf("%w: empty password", errInvalidPassword))
+	if len(r.Password) < minLenPassword {
+		errs = append(errs, fmt.Errorf("%w: password length less than %d bytes", errInvalidPassword, minLenPassword))
 	}
 
 	if len(r.Password) > maxLenPassword {
-		errs = append(errs, fmt.Errorf("%w: password length exceeds 72 bytes", errInvalidPassword))
+		errs = append(errs, fmt.Errorf("%w: password length exceeds %d bytes", errInvalidPassword, maxLenPassword))
 	}
 
 	return errors.Join(errs...)
